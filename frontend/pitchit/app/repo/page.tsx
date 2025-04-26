@@ -13,6 +13,8 @@ export default function RepoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [marketResearchGenerated, setMarketResearchGenerated] = useState<boolean>(false);
+  const [checkingMarketResearch, setCheckingMarketResearch] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const repoUrl = searchParams.get('url');
 
@@ -21,6 +23,25 @@ export default function RepoPage() {
     const isRunning = await checkBackendServer();
     setServerStatus(isRunning ? 'online' : 'offline');
     return isRunning;
+  };
+
+  const checkMarketResearch = async (repoName: string) => {
+    if (checkingMarketResearch) return;
+    
+    try {
+      setCheckingMarketResearch(true);
+      const response = await fetch(`/api/repo/${repoName}/market_research`);
+      if (response.ok) {
+        setMarketResearchGenerated(true);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error checking market research data:', err);
+      return false;
+    } finally {
+      setCheckingMarketResearch(false);
+    }
   };
 
   const getRepoData = async () => {
@@ -43,6 +64,10 @@ export default function RepoPage() {
       setError(null);
       const data = await fetchRepoData(repoUrl);
       setRepoData(data);
+      
+      // Check if market research data exists in the JSON file
+      await checkMarketResearch(data.name);
+      
       setLoading(false);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch repository data';
@@ -51,6 +76,22 @@ export default function RepoPage() {
       console.error(err);
     }
   };
+
+  // Set up polling for market research data
+  useEffect(() => {
+    if (!repoData || marketResearchGenerated) return;
+    
+    const intervalId = setInterval(async () => {
+      if (repoData) {
+        const isGenerated = await checkMarketResearch(repoData.name);
+        if (isGenerated) {
+          clearInterval(intervalId);
+        }
+      }
+    }, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [repoData, marketResearchGenerated]);
 
   useEffect(() => {
     checkServer();
@@ -108,7 +149,7 @@ export default function RepoPage() {
 
   return (
     <div className="mx-auto min-h-screen max-w-[min(80%,64rem)]">
-      <RepoView {...repoData} />
+      <RepoView {...repoData} market_research_generated={marketResearchGenerated} />
     </div>
   );
 }

@@ -9,6 +9,9 @@ from pathlib import Path
 import uvicorn
 import orchestrator
 from fastapi.middleware.cors import CORSMiddleware
+from researcher import market_research, MarketResearch
+import asyncio
+import threading
 
 sys.path.append(str(Path(__file__).parent))
 from main import clone_github_repo
@@ -99,6 +102,25 @@ def create_repo_json(repo_url: str, repo_name: str, repo_path: str, description:
     
     return json_path
 
+def generate_market_research_async(repo_name: str, description: str, json_path: str):
+    """Generate market research data asynchronously"""
+    try:
+        print(f"Generating market research for {repo_name}")
+        market_research_data = market_research(description)
+        
+        # Update the JSON file with market research data
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        repo_data["market_research"] = market_research_data.model_dump()
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(repo_data, f, indent=4)
+        
+        print(f"Market research for {repo_name} generated successfully")
+    except Exception as e:
+        print(f"Error generating market research: {str(e)}")
+
 @app.post("/github", response_model=PitchResponse)
 def initialize_github_repo(repo: GitHubRepo):
     repo_name = extract_repo_name(repo.repo_url)
@@ -115,13 +137,22 @@ def initialize_github_repo(repo: GitHubRepo):
             description=repo.description
         )
         
+        # Start market research generation in a separate thread
+        if repo.description:
+            threading.Thread(
+                target=generate_market_research_async,
+                args=(repo_name, repo.description, json_path),
+                daemon=True
+            ).start()
+        
         return PitchResponse(
             message=f"GitHub repo '{repo_name}' initialized successfully",
             data={
                 "repo_name": repo_name, 
                 "repo_url": str(repo.repo_url),
                 "repo_path": repo_path,
-                "json_path": json_path
+                "json_path": json_path,
+                "market_research_generated": False  # Initially set to False since it's being generated
             }
         )
     except Exception as e:
@@ -182,19 +213,44 @@ def get_branding(repo_name: str, additional_info: Dict[str, Any] = Body({})):
 
 @app.post("/github/{repo_name}/market_research", response_model=PitchResponse)
 def get_market_research(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate market research
-    research_data = {
-        "market_size": "$2.5 billion",
-        "competitors": ["CompetitorA", "CompetitorB", "CompetitorC"],
-        "opportunities": ["Emerging market in Asia", "Growing demand for automation"],
-        "challenges": ["Regulatory compliance", "Market saturation"],
-        # Add more research details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Market research for '{repo_name}' generated successfully",
-        data=research_data
-    )
+    print(f"Getting market research for {repo_name}")
+    try:
+        # Check if market research data exists in the JSON file
+        json_dir = os.path.join("..", ".data", "repo_data")
+        json_path = os.path.join(json_dir, f"{repo_name}.json")
+        
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail=f"Repository '{repo_name}' not found")
+        
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        if "market_research" not in repo_data:
+            # Generate market research data if it doesn't exist
+            if "github_repo" in repo_data and "description" in repo_data["github_repo"]:
+                description = repo_data["github_repo"]["description"]
+                if description:
+                    market_research_data = market_research(description)
+                    repo_data["market_research"] = market_research_data.model_dump()
+                    
+                    with open(json_path, 'w', encoding='utf-8') as f:
+                        json.dump(repo_data, f, indent=4)
+                    
+                    return PitchResponse(
+                        message=f"Market research for '{repo_name}' generated successfully",
+                        data=repo_data["market_research"]
+                    )
+                else:
+                    raise HTTPException(status_code=400, detail="No description available for market research")
+            else:
+                raise HTTPException(status_code=400, detail="No description available for market research")
+        
+        return PitchResponse(
+            message=f"Market research for '{repo_name}' retrieved successfully",
+            data=repo_data["market_research"]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate market research: {str(e)}")
 
 @app.post("/github/{repo_name}/pitch_deck", response_model=PitchResponse)
 def get_pitch_deck(repo_name: str, additional_info: Dict[str, Any] = Body({})):

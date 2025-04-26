@@ -7,7 +7,7 @@ from models.llms import (
     num_tokens_from_messages,
 )
 from models.agents import Agent, AgentConfig
-from models.tools import Tool
+from models.tools import Tool, tool_registry
 
 __all__ = [
     "llm_call",
@@ -19,4 +19,5 @@ __all__ = [
     "Agent",
     "AgentConfig",
     "Tool",
+    "tool_registry",
 ]

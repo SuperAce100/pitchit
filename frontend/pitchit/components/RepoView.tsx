@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ExternalLink, Github, Calendar, User, FileText, Presentation } from 'lucide-react';
+import { ExternalLink, Github, Calendar, User, FileText, Presentation, ShoppingBag } from 'lucide-react';
 import { Markdown } from "@/components/ui/markdown";
 import Link from 'next/link';
 
@@ -15,9 +15,10 @@ interface GitHubRepoProps {
   readme: string;
   created_by: string;
   tree: string;
+  market_research_generated?: boolean;
 }
 
-export function RepoView({ name, description, url, readme, created_by, tree }: GitHubRepoProps) {
+export function RepoView({ name, description, url, readme, created_by, tree, market_research_generated = false }: GitHubRepoProps) {
   // Format the URL if needed
   const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
   
@@ -78,6 +79,36 @@ export function RepoView({ name, description, url, readme, created_by, tree }: G
             </TabsContent>
           </Tabs>
         </CardContent>
+        
+        <CardFooter className="flex flex-wrap gap-4 justify-center">
+          <Link href={`/market?repo=${name}`}>
+            <Button variant="outline" className="flex items-center gap-2" disabled={!market_research_generated}>
+              <ShoppingBag className="h-4 w-4" />
+              Market Research
+              {!market_research_generated && (
+                <Badge variant="secondary" className="ml-2">Generating...</Badge>
+              )}
+            </Button>
+          </Link>
+          <Link href={`/technical?repo=${name}`}>
+            <Button variant="outline" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Technical Brief
+            </Button>
+          </Link>
+          <Link href={`/branding?repo=${name}`}>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Presentation className="h-4 w-4" />
+              Branding
+            </Button>
+          </Link>
+          <Link href={`/deck?repo=${name}`}>
+            <Button className="flex items-center gap-2">
+              <Presentation className="h-4 w-4" />
+              Pitch Deck
+            </Button>
+          </Link>
+        </CardFooter>
       </Card>
     </div>
   );

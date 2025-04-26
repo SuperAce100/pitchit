@@ -11,6 +11,22 @@ export interface GitHubRepoData {
   tree: string;
 }
 
+export interface Competitor {
+  name: string;
+  description: string;
+  market_share: string;
+  strengths: string;
+  weaknesses: string;
+}
+
+export interface MarketResearchData {
+  market_name: string;
+  market_summary: string;
+  market_size: string;
+  market_growth: string;
+  competitors: Competitor[];
+}
+
 export interface PitchDeckData {
   slide_1_title: {
     company_name: string;
@@ -123,6 +139,36 @@ export async function fetchPitchDeckData(repoName: string): Promise<PitchDeckDat
     return data.data;
   } catch (error) {
     console.error('Error fetching pitch deck data:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches market research data from the backend
+ * @param repoName Repository name
+ * @returns Market research data
+ */
+export async function fetchMarketResearchData(repoName: string): Promise<MarketResearchData> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/github/${repoName}/market_research`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    }).catch(error => {
+      console.error('Network error when fetching market research data:', error);
+      throw new Error('Failed to connect to the backend server. Please make sure the server is running.');
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch market research data: ${response.statusText}`);
+    }
+
+    const data: ApiResponse<MarketResearchData> = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching market research data:', error);
     throw error;
   }
 } 

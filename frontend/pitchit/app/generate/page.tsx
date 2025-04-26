@@ -9,12 +9,14 @@ import { BorderBeam } from '@/components/ui/border-beam';
 import { Ripple } from '@/components/ui/ripple';
 import { toast } from "sonner";
 import axios from 'axios';
+import { checkBackendServer } from '@/lib/checkBackend';
 
 export default function GeneratePage() {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [error, setError] = useState('');
+  const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const router = useRouter();
 
   // Function to validate GitHub repository URL
@@ -24,9 +26,17 @@ export default function GeneratePage() {
     return githubRepoRegex.test(url);
   };
 
+  const checkServer = async () => {
+    setServerStatus('checking');
+    const isRunning = await checkBackendServer();
+    setServerStatus(isRunning ? 'online' : 'offline');
+    return isRunning;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
     
     // Validate GitHub repository URL
     if (!isValidGitHubRepo(query)) {
@@ -36,28 +46,50 @@ export default function GeneratePage() {
       });
       return;
     }
+    let repo_url = query;
+
+    if (!repo_url.startsWith('http')) {
+      repo_url = 'http://' + repo_url;
+    }
+
+    
+    // Check if the backend server is running
+    const isServerRunning = await checkServer();
+    if (!isServerRunning) {
+      setError('Backend server is not running. Please start the server and try again.');
+      toast.error("Server Error", {
+        description: "Backend server is not running. Please start the server and try again.",
+      });
+      return;
+    }
     
     setIsLoading(true);
     setLoadingMessage('Generating...');
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      // In a real app, you would call your API here
-      // const response = await axios.post('/api/generate', {
-      //   url: query
-      // });
+      // Call the backend API to initialize the repository
+      const response = await axios.post('http://localhost:8000/github', {
+        repo_url: query,
+        description: "A GitHub repository for pitch generation"
+      });
       
       setIsLoading(false);
-      // setLoadingMessage(response.data.message);
       
       // Navigate to the repo page with the URL as a query parameter
       router.push(`/repo?url=${encodeURIComponent(query)}`);
     } catch (err) {
       setIsLoading(false);
-      setError('Failed to generate content. Please try again.');
-      toast.error('Failed to generate content. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate content';
+      setError(errorMessage);
+      toast.error('Failed to generate content', {
+        description: errorMessage,
+      });
     }
   };
+
+  useEffect(() => {
+    checkServer();
+  }, []);
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-12">
@@ -91,7 +123,7 @@ export default function GeneratePage() {
             <Button
               type="submit"
               size="icon"
-              disabled={isLoading || !query.trim()}
+              disabled={isLoading || !query.trim() || serverStatus === 'offline'}
               className="absolute right-3 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full"
             >
               <SendHorizontal className="w-6 h-6" />
@@ -103,6 +135,12 @@ export default function GeneratePage() {
           </div>
           {error && (
             <p className="text-red-500 text-sm mt-2">{error}</p>
+          )}
+          {serverStatus === 'offline' && (
+            <p className="text-amber-500 text-sm mt-2 flex items-center gap-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
+              Backend server is offline. Please start the server and try again.
+            </p>
           )}
         </form>
         <Ripple className="w-full h-full -z-10" />

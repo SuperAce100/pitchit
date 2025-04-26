@@ -10,6 +10,7 @@ exa = Exa(api_key=os.environ.get("EXA_API_KEY"))
 
 
 def search_web(query: str) -> str:
+    print(f"Searching web for {query}")
     search_results = "\n".join(
         [
             f"{result.title}\n{result.url}\n{result.highlights}"
