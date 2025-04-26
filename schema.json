@@ -15,7 +15,8 @@
                 "trace": [
                     {
                         "file_explored": "string",
-                        "takeaway": "string"
+                        "takeaway": "string",
+                        "file_path": "string"
                     }
                 ]
             }
