@@ -9,7 +9,7 @@ from models.tools import Tool, browser_tool, terminal_tool
 
 dotenv.load_dotenv()
 
-text_model = "openai/gpt-4.1-mini"
+text_model = "anthropic/claude-3-5-sonnet-20240620"
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
