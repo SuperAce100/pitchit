@@ -119,40 +119,13 @@ def initialize_github_repo(repo: GitHubRepo):
     
     
 
-@app.post("/github/{repo_name}/orchestrator_plan", response_model=PitchResponse)
-def get_orchestrator_plan(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate the orchestrator plan
-    plan_data = {
-        "steps": [
-            "Analyze repository code and structure",
-            "Generate technical brief",
-            "Create branding guidelines",
-            "Conduct market research",
-            "Prepare pitch deck"
-        ],
-        "timeline": "2 weeks",
-        # Add more plan details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Orchestrator plan for '{repo_name}' generated successfully",
-        data=plan_data
-    )
-
 @app.post("/github/{repo_name}/technical_brief", response_model=PitchResponse)
-def get_technical_brief(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate the technical brief
-    brief_data = {
-        "architecture": "Microservices",
-        "technologies": ["Python", "FastAPI", "React", "PostgreSQL"],
-        "key_features": ["User authentication", "Data visualization", "API integration"],
-        # Add more technical details as needed
-    }
+def get_technical_brief(repo_name: str, tree_structure: str, repo_path: str):
+    branches = orchestrator.create_orchestrator_branches(tree_structure)
+    sub_agents_responses = orchestrator.create_sub_agents(branches, repo_path)
+    technical_brief = orchestrator.create_technical_brief(repo_name, sub_agents_responses)
     
-    return PitchResponse(
-        message=f"Technical brief for '{repo_name}' generated successfully",
-        data=brief_data
-    )
+    return technical_brief
 
 @app.post("/github/{repo_name}/branding", response_model=PitchResponse)
 def get_branding(repo_name: str, additional_info: Dict[str, Any] = Body({})):

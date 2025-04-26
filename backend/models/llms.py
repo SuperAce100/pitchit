@@ -195,6 +195,7 @@ def llm_call_messages(
 
         kwargs: dict[str, Any] = {"model": model, "messages": messages}
 
+
         response = client.chat.completions.create(**kwargs)
 
         if not response.choices or not response.choices[0].message.content:
@@ -253,54 +254,134 @@ def _llm_call_tools(
     """
     Simple LLM call with tools. No structured response.
     """
-    resp = client.chat.completions.create(
-        model=model, tools=[tool.to_openai_tool() for tool in tools], messages=msgs
-    )
     try:
+        # Ensure we have at least one message
+        if not msgs:
+            raise ValueError("At least one message is required")
+            
+        resp = client.chat.completions.create(
+            model=model, tools=[tool.to_openai_tool() for tool in tools], messages=msgs
+        )
+        
+        # Check if the response contains an error
+        if hasattr(resp, 'error') and resp.error is not None:
+            raise ValueError(f"API returned an error: {resp.error}")
+            
+        # Check if choices exists and is not empty
+        if not resp.choices or len(resp.choices) == 0:
+            raise ValueError("API response contains no choices")
+            
+        # Add the response message to the messages list
         msgs.append(resp.choices[0].message.model_dump())
+        
+        return resp
     except Exception as e:
-        raise ValueError(f"Failed to parse response: {e}, {resp}")
+        # Provide a more detailed error message
+        error_msg = f"Error in LLM call: {str(e)}"
+        if 'resp' in locals():
+            error_msg += f"\nResponse: {resp}"
+        raise ValueError(error_msg)
 
-    return resp
 
-
-def _get_tool_responses(
-    response: ChatCompletion, tools: list[Tool]
-) -> list[dict[str, Any]]:
-    MAX_TOOL_RESP_LENGTH = 10000
-    tool_responses = []
-
-    for tool_call in response.choices[0].message.tool_calls:
-        tool_name = tool_call.function.name
-        tool_args = json.loads(tool_call.function.arguments)
-        chosen_tool = [tool for tool in tools if tool.name == tool_name][0]
-        tool_result = chosen_tool(**tool_args)
-
-        if len(tool_result) > MAX_TOOL_RESP_LENGTH:
-            tool_result = tool_result[:MAX_TOOL_RESP_LENGTH] + "..."
-
-        tool_responses.append(
-            {
+def _get_tool_responses(resp, tools):
+    """Process tool calls from the response and return tool response messages."""
+    messages = []
+    
+    # Access tool_calls from the correct location in the response structure
+    tool_calls = resp.choices[0].message.tool_calls
+    
+    if not tool_calls:
+        return messages
+        
+    for tool_call in tool_calls:
+        try:
+            tool_args = json.loads(tool_call.function.arguments)
+            tool_name = tool_call.function.name
+            
+            # Find the matching tool
+            matching_tool = None
+            for tool in tools:
+                if tool.name == tool_name:
+                    matching_tool = tool
+                    break
+            
+            if matching_tool:
+                # Call the tool with the arguments
+                tool_response = matching_tool(**tool_args)
+                
+                # Add the tool response as a message
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": str(tool_response),
+                })
+            else:
+                # Tool not found
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": f"Error: Tool '{tool_name}' not found.",
+                })
+        except json.JSONDecodeError as e:
+            # Handle JSON parsing errors
+            messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
-                "name": tool_name,
-                "content": tool_result,
-            }
-        )
-
-    return tool_responses
+                "content": f"Error: Invalid JSON in tool arguments: {str(e)}. Raw arguments: {tool_call.function.arguments}",
+            })
+        except Exception as e:
+            # Handle other errors
+            messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": f"Error executing tool: {str(e)}",
+            })
+    
+    return messages
 
 
 def llm_call_with_tools(
     messages: list[dict[str, str]], tools: list[Tool], model: str = text_model
 ) -> str:
+    """
+    Make LLM calls with tools, handling tool responses until a final text response is received.
+    
+    Args:
+        messages: List of message dictionaries
+        tools: List of Tool objects to make available to the LLM
+        model: Model identifier to use
+        
+    Returns:
+        The final text response from the LLM
+    """
+    # Validate that we have at least one message
+    if not messages:
+        raise ValueError("Cannot make LLM call with empty messages list")
+        
+    # Make a copy of messages to avoid modifying the original
+    messages_copy = messages.copy()
+    
     while True:
-        resp = _llm_call_tools(messages, tools, model)
-        if resp.choices[0].message.tool_calls is not None:
-            messages.extend(_get_tool_responses(resp, tools))
+        resp = _llm_call_tools(messages_copy, tools, model)
+        
+        # Check if the response has tool calls
+        if resp.choices and resp.choices[0].message.tool_calls:
+            # Process tool calls and add responses to messages
+            tool_responses = _get_tool_responses(resp, tools)
+            if tool_responses:
+                messages_copy.extend(tool_responses)
+            else:
+                # No tool responses generated, break to avoid infinite loop
+                break
         else:
+            # No tool calls, we have our final response
             break
-    return messages[-1]["content"]
+            
+    # Return the final message content
+    if messages_copy and len(messages_copy) > len(messages):
+        return messages_copy[-1]["content"]
+    else:
+        raise ValueError("No response was generated from the LLM")
 
 
 async def llm_call_messages_async(

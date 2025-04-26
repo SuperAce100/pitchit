@@ -1,5 +1,6 @@
 from models.tools.tool import Tool
 from models.tools.web_search import web_search_tool
+from models.tools.file_traversal import ls_tool, cd_tool, read_file_tool, pwd_tool
 from typing import Dict, Optional
 
 
@@ -39,5 +40,9 @@ class ToolRegistry:
 tool_registry = ToolRegistry()
 
 tool_registry.register(web_search_tool)
+tool_registry.register(ls_tool)
+tool_registry.register(cd_tool)
+tool_registry.register(read_file_tool)
+tool_registry.register(pwd_tool)
 
 __all__ = ["Tool", "tool_registry"]
