@@ -7,110 +7,60 @@ import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 
 // This is mock data - in a real app, this would come from an API or database
 const mockPitchDeckData = {
-  companyOverview: {
-    oneLiner: "AI-powered pitch deck generator for startups",
-    missionStatement: "To help entrepreneurs create compelling pitch decks in minutes, not days"
+  slide_1_title: {
+    company_name: "PitchIt",
+    tagline: "AI-powered pitch deck generator for startups"
   },
-  problem: {
-    description: "Creating a professional pitch deck is time-consuming and expensive",
-    currentSolutions: "Manual creation, expensive agencies, or generic templates"
+  slide_2_problem: {
+    problem_statement: "Creating a professional pitch deck is time-consuming and expensive. Entrepreneurs spend countless hours perfecting their pitch decks or pay thousands to agencies.",
+    why_now: "With the rise of AI and the increasing number of startups, there's a growing need for efficient, cost-effective solutions to create compelling pitch decks."
   },
-  solution: {
-    productDescription: "An AI-powered platform that generates customized pitch decks based on your business data",
-    keyFeatures: [
+  slide_3_solution: {
+    product_overview: "PitchIt is an AI-powered platform that generates customized pitch decks based on your business data, saving you time and money.",
+    key_features: [
       "AI-powered content generation",
       "Professional templates",
       "Real-time collaboration",
       "Custom branding options"
-    ]
+    ],
+    unique_value_proposition: "Unlike traditional agencies or generic templates, PitchIt combines AI technology with industry expertise to create pitch decks that stand out."
   },
-  market: {
-    targetCustomers: "Early-stage startups and entrepreneurs",
-    marketSize: {
-      totalAddressableMarket: 5000000000,
-      serviceableAddressableMarket: 1000000000
-    },
-    marketGrowth: "20% YoY growth in startup formation"
+  slide_4_market_opportunity: {
+    target_market: "Early-stage startups and entrepreneurs seeking funding",
+    market_size: "$5B total addressable market with $1B serviceable market",
+    market_growth: "20% YoY growth in startup formation, creating increasing demand for pitch deck services"
   },
-  product: {
-    demoLink: "https://demo.pitchit.ai",
-    technologyStack: "Next.js, React, TypeScript, Tailwind CSS"
+  slide_5_product_demonstration: {
+    how_it_works: "Users input their business information through our intuitive interface. Our AI analyzes the data and generates a professional pitch deck with compelling narratives and visuals.",
+    user_experience_highlights: "Simple 3-step process: Input data, customize design, export presentation. No design skills required."
   },
-  businessModel: {
-    revenueStreams: "Subscription-based SaaS model with tiered pricing",
-    pricingStrategy: "Freemium model with premium features"
+  slide_6_business_model: {
+    revenue_streams: "Subscription-based SaaS model with tiered pricing plans",
+    pricing_strategy: "Freemium model with premium features for professional users. Enterprise plans for agencies and accelerators."
   },
-  traction: {
-    keyMetrics: {
-      users: 10000,
-      monthlyRevenue: 50000,
-      growthRate: "15% MoM"
-    },
-    milestones: [
+  slide_7_roadmap: {
+    milestones_achieved: [
       "Launched MVP",
       "Reached 10,000 users",
       "Secured seed funding"
-    ]
-  },
-  team: {
-    founders: [
-      {
-        name: "John Doe",
-        role: "CEO",
-        background: "Former Product Manager at Google"
-      },
-      {
-        name: "Jane Smith",
-        role: "CTO",
-        background: "PhD in Computer Science, ML expert"
-      }
     ],
-    advisors: [
-      "Tech Industry Veteran",
-      "Successful Startup Founder",
-      "Investment Banker"
+    future_plans: [
+      "Launch advanced AI features",
+      "Expand to international markets",
+      "Develop mobile app"
     ]
   },
-  competition: {
-    competitors: [
-      "Traditional pitch deck agencies",
-      "Generic template providers",
-      "Manual creation tools"
-    ],
-    competitiveAdvantage: "AI-powered automation and customization"
-  },
-  financials: {
-    historicalFinancials: {
-      revenue: 500000,
-      expenses: 300000
-    },
-    projections: {
-      next12MonthsRevenue: 2000000,
-      next12MonthsExpenses: 1000000
-    }
-  },
-  funding: {
-    amountRaising: 2000000,
-    useOfFunds: {
-      productDevelopment: 800000,
-      marketing: 500000,
-      hiring: 500000,
-      other: 200000
-    },
-    fundingHistory: [
-      {
-        round: "Seed",
-        amount: 500000,
-        investors: ["Angel Investor 1", "Angel Investor 2"]
-      }
-    ]
+  slide_8_call_to_action: {
+    funding_needs: "$2M Seed Round",
+    use_of_funds: "Product development (40%), Marketing (25%), Hiring (25%), Other (10%)",
+    vision_statement: "To become the go-to platform for pitch deck creation, empowering entrepreneurs worldwide to tell their stories effectively."
   }
 };
 
 export default function DeckPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const totalSlides = 10; // Total number of slides
+  const totalSlides = 8; // Total number of slides
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -140,7 +90,7 @@ export default function DeckPage() {
   };
 
   return (
-    <div className="min-h-screenp-4">
+    <div className="min-h-screen p-4">
       <div className="mx-auto max-w-[min(80%,64rem)]">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-4xl tracking-tight mt-12">Pitch Deck</h1>
@@ -157,6 +107,9 @@ export default function DeckPage() {
         </div>
         <div className="rounded-lg overflow-hidden shadow-md">
           <PitchDeckView {...mockPitchDeckData} />
+        </div>
+        <div className="mt-4 text-center text-sm text-gray-500">
+          <p>Use arrow keys to navigate • Press 'F' for fullscreen</p>
         </div>
       </div>
     </div>

@@ -73,263 +73,139 @@
         ]
     },
     "pitch_deck": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "Seed Round Pitch Deck",
-        "type": "object",
         "properties": {
-            "company_overview": {
-                "type": "object",
-                "properties": {
-                    "one_liner": {
-                        "type": "string",
-                        "description": "A concise description of what your company does."
-                    },
-                    "mission_statement": {
-                        "type": "string",
-                        "description": "Your company's mission or vision statement."
-                    }
+            "slide_1_title": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                "type": "string",
+                "description": "Name of the company."
+                },
+                "tagline": {
+                "type": "string",
+                "description": "A concise, memorable one-liner describing the company."
                 }
             },
-            "problem": {
-                "type": "object",
-                "properties": {
-                    "description": {
-                        "type": "string",
-                        "description": "The problem your company aims to solve."
-                    },
-                    "current_solutions": {
-                        "type": "string",
-                        "description": "Existing solutions and their shortcomings."
-                    }
+            "required": ["company_name", "tagline"]
+            },
+            "slide_2_problem": {
+            "type": "object",
+            "properties": {
+                "problem_statement": {
+                "type": "string",
+                "description": "A brief description of the problem being addressed."
+                },
+                "why_now": {
+                "type": "string",
+                "description": "Explanation of why this problem is urgent or timely."
                 }
             },
-            "solution": {
-                "type": "object",
-                "properties": {
-                    "product_description": {
-                        "type": "string",
-                        "description": "Overview of your product or service."
-                    },
-                    "key_features": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "List of key features or differentiators."
-                    }
+            "required": ["problem_statement"]
+            },
+            "slide_3_solution": {
+            "type": "object",
+            "properties": {
+                "product_overview": {
+                "type": "string",
+                "description": "A brief overview of the product or service offered."
+                },
+                "key_features": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "List of key features or functionalities."
+                },
+                "unique_value_proposition": {
+                "type": "string",
+                "description": "What sets your solution apart from others."
                 }
             },
-            "market": {
-                "type": "object",
-                "properties": {
-                    "target_customers": {
-                        "type": "string",
-                        "description": "Description of your target customer segments."
-                    },
-                    "market_size": {
-                        "type": "object",
-                        "properties": {
-                            "total_addressable_market": {
-                                "type": "number",
-                                "description": "Total addressable market size in dollars."
-                            },
-                            "serviceable_addressable_market": {
-                                "type": "number",
-                                "description": "Serviceable addressable market size in dollars."
-                            }
-                        }
-                    },
-                    "market_growth": {
-                        "type": "string",
-                        "description": "Information on market growth trends."
-                    }
+            "required": ["product_overview"]
+            },
+            "slide_4_market_opportunity": {
+            "type": "object",
+            "properties": {
+                "target_market": {
+                "type": "string",
+                "description": "Description of your ideal customer segment."
+                },
+                "market_size": {
+                "type": "string",
+                "description": "Estimated size of the addressable market."
+                },
+                "market_growth": {
+                "type": "string",
+                "description": "Information on market growth trends."
                 }
             },
-            "product": {
-                "type": "object",
-                "properties": {
-                    "demo_link": {
-                        "type": "string",
-                        "format": "uri",
-                        "description": "Link to a product demo or prototype."
-                    },
-                    "technology_stack": {
-                        "type": "string",
-                        "description": "Overview of the technology stack used."
-                    }
+            "required": ["target_market", "market_size"]
+            },
+            "slide_5_product_demonstration": {
+            "type": "object",
+            "properties": {
+                "how_it_works": {
+                "type": "string",
+                "description": "A step-by-step explanation or visuals showing how users interact with your product."
+                },
+                "user_experience_highlights": {
+                "type": "string",
+                "description": "Key aspects that enhance user engagement or satisfaction."
                 }
             },
-            "business_model": {
-                "type": "object",
-                "properties": {
-                    "revenue_streams": {
-                        "type": "string",
-                        "description": "Explanation of how the company makes money."
-                    },
-                    "pricing_strategy": {
-                        "type": "string",
-                        "description": "Details of your pricing model."
-                    }
+            "required": ["how_it_works"]
+            },
+            "slide_6_business_model": {
+            "type": "object",
+            "properties": {
+                "revenue_streams": {
+                "type": "string",
+                "description": "Explanation of how the company generates revenue."
+                },
+                "pricing_strategy": {
+                "type": "string",
+                "description": "Overview of your pricing model."
                 }
             },
-            "traction": {
-                "type": "object",
-                "properties": {
-                    "key_metrics": {
-                        "type": "object",
-                        "properties": {
-                            "users": {
-                                "type": "number",
-                                "description": "Number of users."
-                            },
-                            "monthly_revenue": {
-                                "type": "number",
-                                "description": "Monthly revenue in dollars."
-                            },
-                            "growth_rate": {
-                                "type": "string",
-                                "description": "User or revenue growth rate."
-                            }
-                        }
-                    },
-                    "milestones": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Significant milestones achieved."
-                    }
-                }
+            "required": ["revenue_streams"]
             },
-            "team": {
-                "type": "object",
-                "properties": {
-                    "founders": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "name": {
-                                    "type": "string"
-                                },
-                                "role": {
-                                    "type": "string"
-                                },
-                                "background": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "description": "List of founders with roles and backgrounds."
-                    },
-                    "advisors": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "List of advisors."
-                    }
-                }
-            },
-            "competition": {
-                "type": "object",
-                "properties": {
-                    "competitors": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "List of main competitors."
-                    },
-                    "competitive_advantage": {
-                        "type": "string",
-                        "description": "Your company's competitive advantages."
-                    }
-                }
-            },
-            "financials": {
-                "type": "object",
-                "properties": {
-                    "historical_financials": {
-                        "type": "object",
-                        "properties": {
-                            "revenue": {
-                                "type": "number",
-                                "description": "Historical revenue in dollars."
-                            },
-                            "expenses": {
-                                "type": "number",
-                                "description": "Historical expenses in dollars."
-                            }
-                        }
-                    },
-                    "projections": {
-                        "type": "object",
-                        "properties": {
-                            "next_12_months_revenue": {
-                                "type": "number",
-                                "description": "Projected revenue for the next 12 months."
-                            },
-                            "next_12_months_expenses": {
-                                "type": "number",
-                                "description": "Projected expenses for the next 12 months."
-                            }
-                        }
-                    }
-                }
-            },
-            "funding": {
-                "type": "object",
-                "properties": {
-                    "amount_raising": {
-                        "type": "number",
-                        "description": "Amount of funding you are seeking."
-                    },
-                    "use_of_funds": {
-                        "type": "object",
-                        "properties": {
-                            "product_development": {
-                                "type": "number",
-                                "description": "Amount allocated to product development."
-                            },
-                            "marketing": {
-                                "type": "number",
-                                "description": "Amount allocated to marketing."
-                            },
-                            "hiring": {
-                                "type": "number",
-                                "description": "Amount allocated to hiring."
-                            },
-                            "other": {
-                                "type": "number",
-                                "description": "Amount allocated to other expenses."
-                            }
-                        },
-                        "description": "Breakdown of how the funds will be used."
-                    },
-                    "funding_history": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "round": {
-                                    "type": "string"
-                                },
-                                "amount": {
-                                    "type": "number"
-                                },
-                                "investors": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
-                        },
-                        "description": "Details of previous funding rounds."
-                    }
+            "slide_7_roadmap": {
+            "type": "object",
+            "properties": {
+                "milestones_achieved": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Key achievements to date."
+                },
+                "future_plans": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "Upcoming goals and timelines for product development, market expansion, etc."
                 }
             }
-        }
+            },
+            "slide_8_call_to_action": {
+            "type": "object",
+            "properties": {
+                "funding_needs": {
+                "type": "string",
+                "description": "Amount of funding you're seeking."
+                },
+                "use_of_funds": {
+                "type": "string",
+                "description": "Planned allocation of the raised funds (e.g., product development, marketing)."
+                },
+                "vision_statement": {
+                "type": "string",
+                "description": "A compelling statement about the future impact of your product."
+                }
+            },
+            "required": ["funding_needs", "use_of_funds"]
+            }
+        },
     }
 }

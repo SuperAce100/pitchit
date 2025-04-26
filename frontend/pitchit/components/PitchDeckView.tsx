@@ -8,78 +8,230 @@ import {
   CarouselPrevious,
 } from "./ui/carousel";
 
+// Shared styles
+const styles = {
+  slide: "p-6 h-[600px] flex flex-col",
+  slide_title: "text-4xl tracking-tight mb-6",
+  content_card: "bg-white/80 p-4 rounded-lg",
+  content_title: "font-semibold mb-2",
+  list: "list-disc pl-5 space-y-2",
+  grid: "flex-1 grid grid-cols-2 gap-6",
+  full_width: "col-span-2",
+  slide_background: "bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg"
+};
+
+// Slide Components
+const TitleSlide = ({ company_name, tagline }: { company_name: string; tagline: string }) => (
+  <div className={`${styles.slide} items-center justify-center ${styles.slide_background}`}>
+    <h1 className="text-4xl font-bold text-center mb-6">{company_name}</h1>
+    <p className="text-xl text-center max-w-2xl">{tagline}</p>
+  </div>
+);
+
+const ProblemSlide = ({ problem_statement, why_now }: { problem_statement: string; why_now?: string }) => (
+  <div className={`${styles.slide} items-center justify-center ${styles.slide_background}`}>
+    <h2 className={styles.slide_title}>The Problem</h2>
+    <div className="flex-1 flex flex-col justify-center">
+      <p className="text-xl mb-6">{problem_statement}</p>
+      {why_now && (
+        <div className={styles.content_card}>
+          <h3 className={styles.content_title}>Why Now?</h3>
+          <p>{why_now}</p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const SolutionSlide = ({ product_overview, key_features, unique_value_proposition }: { 
+  product_overview: string; 
+  key_features?: string[]; 
+  unique_value_proposition?: string;
+}) => (
+  <div className={`${styles.slide} items-center justify-center ${styles.slide_background}`}>
+    <h2 className={styles.slide_title}>Our Solution</h2>
+    <div className="flex-1 flex flex-col justify-center">
+      <p className="text-xl mb-6">{product_overview}</p>
+      {key_features && key_features.length > 0 && (
+        <div className={styles.content_card}>
+          <h3 className={styles.content_title}>Key Features:</h3>
+          <ul className={styles.list}>
+            {key_features.map((feature, index) => (
+              <li key={index}>{feature}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {unique_value_proposition && (
+        <div className={`${styles.content_card} mt-4`}>
+          <h3 className={styles.content_title}>Unique Value Proposition:</h3>
+          <p>{unique_value_proposition}</p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const MarketOpportunitySlide = ({ target_market, market_size, market_growth }: { 
+  target_market: string; 
+  market_size: string; 
+  market_growth?: string;
+}) => (
+  <div className={`${styles.slide} items-center justify-center ${styles.slide_background}`}>
+    <h2 className={styles.slide_title}>Market Opportunity</h2>
+    <div className={styles.grid}>
+      <div className={styles.content_card}>
+        <h3 className={styles.content_title}>Target Market</h3>
+        <p>{target_market}</p>
+      </div>
+      <div className={styles.content_card}>
+        <h3 className={styles.content_title}>Market Size</h3>
+        <p>{market_size}</p>
+      </div>
+      {market_growth && (
+        <div className={`${styles.content_card} ${styles.full_width}`}>
+          <h3 className={styles.content_title}>Market Growth</h3>
+          <p>{market_growth}</p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const ProductDemonstrationSlide = ({ how_it_works, user_experience_highlights }: { 
+  how_it_works: string; 
+  user_experience_highlights?: string;
+}) => (
+  <div className={`${styles.slide} items-center justify-center ${styles.slide_background}`}>
+    <h2 className={styles.slide_title}>Product Demonstration</h2>
+    <div className="flex-1 flex flex-col justify-center">
+      <div className={styles.content_card}>
+        <h3 className={styles.content_title}>How It Works</h3>
+        <p>{how_it_works}</p>
+      </div>
+      {user_experience_highlights && (
+        <div className={`${styles.content_card} mt-4`}>
+          <h3 className={styles.content_title}>User Experience Highlights</h3>
+          <p>{user_experience_highlights}</p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const BusinessModelSlide = ({ revenue_streams, pricing_strategy }: { 
+  revenue_streams: string; 
+  pricing_strategy?: string;
+}) => (
+  <div className={`${styles.slide} items-center justify-center ${styles.slide_background}`}>
+    <h2 className={styles.slide_title}>Business Model</h2>
+    <div className={styles.grid}>
+      <div className={styles.content_card}>
+        <h3 className={styles.content_title}>Revenue Streams</h3>
+        <p>{revenue_streams}</p>
+      </div>
+      {pricing_strategy && (
+        <div className={styles.content_card}>
+          <h3 className={styles.content_title}>Pricing Strategy</h3>
+          <p>{pricing_strategy}</p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const RoadmapSlide = ({ milestones_achieved, future_plans }: { 
+  milestones_achieved?: string[]; 
+  future_plans?: string[];
+}) => (
+  <div className={`${styles.slide} items-center justify-center ${styles.slide_background}`}>
+    <h2 className={styles.slide_title}>Roadmap</h2>
+    <div className={styles.grid}>
+      {milestones_achieved && milestones_achieved.length > 0 && (
+        <div className={styles.content_card}>
+          <h3 className={styles.content_title}>Milestones Achieved</h3>
+          <ul className={styles.list}>
+            {milestones_achieved.map((milestone, index) => (
+              <li key={index}>{milestone}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {future_plans && future_plans.length > 0 && (
+        <div className={styles.content_card}>
+          <h3 className={styles.content_title}>Future Plans</h3>
+          <ul className={styles.list}>
+            {future_plans.map((plan, index) => (
+              <li key={index}>{plan}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const CallToActionSlide = ({ funding_needs, use_of_funds, vision_statement }: { 
+  funding_needs: string; 
+  use_of_funds: string; 
+  vision_statement?: string;
+}) => (
+  <div className={`${styles.slide} items-center justify-center ${styles.slide_background}`}>
+    <h2 className={styles.slide_title}>Call to Action</h2>
+    <div className={styles.grid}>
+      <div className={styles.content_card}>
+        <h3 className={styles.content_title}>Funding Needs</h3>
+        <p className="text-2xl font-bold">{funding_needs}</p>
+      </div>
+      <div className={styles.content_card}>
+        <h3 className={styles.content_title}>Use of Funds</h3>
+        <p>{use_of_funds}</p>
+      </div>
+      {vision_statement && (
+        <div className={`${styles.content_card} ${styles.full_width}`}>
+          <h3 className={styles.content_title}>Vision Statement</h3>
+          <p>{vision_statement}</p>
+        </div>
+      )}
+    </div>
+  </div>
+);
+
 interface PitchDeckProps {
-  companyOverview: {
-    oneLiner: string;
-    missionStatement: string;
+  slide_1_title: {
+    company_name: string;
+    tagline: string;
   };
-  problem: {
-    description: string;
-    currentSolutions: string;
+  slide_2_problem: {
+    problem_statement: string;
+    why_now?: string;
   };
-  solution: {
-    productDescription: string;
-    keyFeatures: string[];
+  slide_3_solution: {
+    product_overview: string;
+    key_features?: string[];
+    unique_value_proposition?: string;
   };
-  market: {
-    targetCustomers: string;
-    marketSize: {
-      totalAddressableMarket: number;
-      serviceableAddressableMarket: number;
-    };
-    marketGrowth: string;
+  slide_4_market_opportunity: {
+    target_market: string;
+    market_size: string;
+    market_growth?: string;
   };
-  product: {
-    demoLink: string;
-    technologyStack: string;
+  slide_5_product_demonstration: {
+    how_it_works: string;
+    user_experience_highlights?: string;
   };
-  businessModel: {
-    revenueStreams: string;
-    pricingStrategy: string;
+  slide_6_business_model: {
+    revenue_streams: string;
+    pricing_strategy?: string;
   };
-  traction: {
-    keyMetrics: {
-      users: number;
-      monthlyRevenue: number;
-      growthRate: string;
-    };
-    milestones: string[];
+  slide_7_roadmap: {
+    milestones_achieved?: string[];
+    future_plans?: string[];
   };
-  team: {
-    founders: Array<{
-      name: string;
-      role: string;
-      background: string;
-    }>;
-    advisors: string[];
-  };
-  competition: {
-    competitors: string[];
-    competitiveAdvantage: string;
-  };
-  financials: {
-    historicalFinancials: {
-      revenue: number;
-      expenses: number;
-    };
-    projections: {
-      next12MonthsRevenue: number;
-      next12MonthsExpenses: number;
-    };
-  };
-  funding: {
-    amountRaising: number;
-    useOfFunds: {
-      productDevelopment: number;
-      marketing: number;
-      hiring: number;
-      other: number;
-    };
-    fundingHistory: Array<{
-      round: string;
-      amount: number;
-      investors: string[];
-    }>;
+  slide_8_call_to_action: {
+    funding_needs: string;
+    use_of_funds: string;
+    vision_statement?: string;
   };
 }
 
@@ -88,220 +240,29 @@ export function PitchDeckView(props: PitchDeckProps) {
     <div className="w-full max-w-5xl mx-auto">
       <Carousel className="w-full">
         <CarouselContent>
-          {/* Title Slide */}
           <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
-              <h1 className="text-4xl font-bold text-center mb-6">{props.companyOverview.oneLiner}</h1>
-              <p className="text-xl text-center max-w-2xl">{props.companyOverview.missionStatement}</p>
-            </div>
+            <TitleSlide {...props.slide_1_title} />
           </CarouselItem>
-
-          {/* Problem Slide */}
           <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-red-50 to-orange-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">The Problem</h2>
-              <div className="flex-1 flex flex-col justify-center">
-                <p className="text-xl mb-6">{props.problem.description}</p>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Current Solutions:</h3>
-                  <p>{props.problem.currentSolutions}</p>
-                </div>
-              </div>
-            </div>
+            <ProblemSlide {...props.slide_2_problem} />
           </CarouselItem>
-
-          {/* Solution Slide */}
           <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-green-50 to-teal-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Our Solution</h2>
-              <div className="flex-1 flex flex-col justify-center">
-                <p className="text-xl mb-6">{props.solution.productDescription}</p>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Key Features:</h3>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {props.solution.keyFeatures.map((feature, index) => (
-                      <li key={index}>{feature}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
+            <SolutionSlide {...props.slide_3_solution} />
           </CarouselItem>
-
-          {/* Market Slide */}
           <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Market Opportunity</h2>
-              <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Target Customers</h3>
-                  <p>{props.market.targetCustomers}</p>
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Market Size</h3>
-                  <p>TAM: ${props.market.marketSize.totalAddressableMarket.toLocaleString()}</p>
-                  <p>SAM: ${props.market.marketSize.serviceableAddressableMarket.toLocaleString()}</p>
-                </div>
-                <div className="col-span-2 bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Market Growth</h3>
-                  <p>{props.market.marketGrowth}</p>
-                </div>
-              </div>
-            </div>
+            <MarketOpportunitySlide {...props.slide_4_market_opportunity} />
           </CarouselItem>
-
-          {/* Product Slide */}
           <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Product</h2>
-              <div className="flex-1 flex flex-col justify-center">
-                <div className="bg-white/50 p-4 rounded-lg mb-6">
-                  <h3 className="font-semibold mb-2">Demo</h3>
-                  <a href={props.product.demoLink} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                    View Demo
-                  </a>
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Technology Stack</h3>
-                  <p>{props.product.technologyStack}</p>
-                </div>
-              </div>
-            </div>
+            <ProductDemonstrationSlide {...props.slide_5_product_demonstration} />
           </CarouselItem>
-
-          {/* Business Model Slide */}
           <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Business Model</h2>
-              <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Revenue Streams</h3>
-                  <p>{props.businessModel.revenueStreams}</p>
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Pricing Strategy</h3>
-                  <p>{props.businessModel.pricingStrategy}</p>
-                </div>
-              </div>
-            </div>
+            <BusinessModelSlide {...props.slide_6_business_model} />
           </CarouselItem>
-
-          {/* Traction Slide */}
           <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Traction</h2>
-              <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Key Metrics</h3>
-                  <p>Users: {props.traction.keyMetrics.users.toLocaleString()}</p>
-                  <p>Monthly Revenue: ${props.traction.keyMetrics.monthlyRevenue.toLocaleString()}</p>
-                  <p>Growth Rate: {props.traction.keyMetrics.growthRate}</p>
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Milestones</h3>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {props.traction.milestones.map((milestone, index) => (
-                      <li key={index}>{milestone}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
+            <RoadmapSlide {...props.slide_7_roadmap} />
           </CarouselItem>
-
-          {/* Team Slide */}
           <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-indigo-50 to-violet-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Team</h2>
-              <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-4">Founders</h3>
-                  {props.team.founders.map((founder, index) => (
-                    <div key={index} className="mb-4">
-                      <p className="font-medium">{founder.name} - {founder.role}</p>
-                      <p className="text-sm">{founder.background}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Advisors</h3>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {props.team.advisors.map((advisor, index) => (
-                      <li key={index}>{advisor}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </CarouselItem>
-
-          {/* Competition Slide */}
-          <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-rose-50 to-red-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Competition</h2>
-              <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Competitors</h3>
-                  <ul className="list-disc pl-5 space-y-2">
-                    {props.competition.competitors.map((competitor, index) => (
-                      <li key={index}>{competitor}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Competitive Advantage</h3>
-                  <p>{props.competition.competitiveAdvantage}</p>
-                </div>
-              </div>
-            </div>
-          </CarouselItem>
-
-          {/* Financials Slide */}
-          <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Financials</h2>
-              <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Historical Financials</h3>
-                  <p>Revenue: ${props.financials.historicalFinancials.revenue.toLocaleString()}</p>
-                  <p>Expenses: ${props.financials.historicalFinancials.expenses.toLocaleString()}</p>
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Projections (Next 12 Months)</h3>
-                  <p>Revenue: ${props.financials.projections.next12MonthsRevenue.toLocaleString()}</p>
-                  <p>Expenses: ${props.financials.projections.next12MonthsExpenses.toLocaleString()}</p>
-                </div>
-              </div>
-            </div>
-          </CarouselItem>
-
-          {/* Funding Slide */}
-          <CarouselItem>
-            <div className="p-6 h-[600px] flex flex-col bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg">
-              <h2 className="text-3xl font-bold mb-6">Funding</h2>
-              <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Amount Raising</h3>
-                  <p className="text-2xl font-bold">${props.funding.amountRaising.toLocaleString()}</p>
-                </div>
-                <div className="bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Use of Funds</h3>
-                  <p>Product Development: ${props.funding.useOfFunds.productDevelopment.toLocaleString()}</p>
-                  <p>Marketing: ${props.funding.useOfFunds.marketing.toLocaleString()}</p>
-                  <p>Hiring: ${props.funding.useOfFunds.hiring.toLocaleString()}</p>
-                  <p>Other: ${props.funding.useOfFunds.other.toLocaleString()}</p>
-                </div>
-                <div className="col-span-2 bg-white/50 p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Funding History</h3>
-                  {props.funding.fundingHistory.map((round, index) => (
-                    <div key={index} className="mb-2">
-                      <p className="font-medium">{round.round} - ${round.amount.toLocaleString()}</p>
-                      <p className="text-sm">Investors: {round.investors.join(', ')}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <CallToActionSlide {...props.slide_8_call_to_action} />
           </CarouselItem>
         </CarouselContent>
         <CarouselPrevious className="left-2" />
