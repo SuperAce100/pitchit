@@ -9,19 +9,24 @@ interface Competitor {
 }
 
 interface MarketResearchProps {
+  market_name: string
+  market_summary: string
   market_size: string
   market_growth: string
   competitors: Competitor[]
 }
 
 export function MarketResearchView({
+  market_name,
+  market_summary,
   market_size,
   market_growth,
   competitors,
 }: MarketResearchProps) {
   return (
     <div className="space-y-6">
-      <h1 className="text-4xl tracking-tight">Market Research</h1>
+      <h1 className="text-4xl tracking-tight">{market_name}</h1>
+      <p className="text-lg text-muted-foreground">{market_summary}</p>
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-lg border p-6">
           <h2 className="text-lg font-medium mb-2">Market Size</h2>

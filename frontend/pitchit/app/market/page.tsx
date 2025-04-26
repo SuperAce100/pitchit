@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { fetchMarketResearchData, MarketResearchData } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { MarketResearchView } from '@/components/MarketResearchView';
 
 export default function MarketPage() {
   const [marketData, setMarketData] = useState<MarketResearchData | null>(null);
@@ -116,25 +117,13 @@ export default function MarketPage() {
 
   return (
     <div className="mx-auto min-h-screen max-w-[min(80%,64rem)] p-4">
-      <h1 className="text-3xl font-bold mb-6">Market Research</h1>
-      <div className="space-y-6">
-        <div className="bg-card rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Market Size</h2>
-          <p className="text-muted-foreground">{marketData.market_size}</p>
-        </div>
-        <div className="bg-card rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Market Growth</h2>
-          <p className="text-muted-foreground">{marketData.market_growth}</p>
-        </div>
-        <div className="bg-card rounded-lg p-6 shadow-sm">
-          <h2 className="text-xl font-semibold mb-4">Competitors</h2>
-          <ul className="list-disc list-inside space-y-2">
-            {marketData.competitors.map((competitor, index) => (
-              <li key={index} className="text-muted-foreground">{competitor.name}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <MarketResearchView 
+        market_name={marketData?.market_name}
+        market_summary={marketData?.market_summary}
+        market_size={marketData?.market_size}
+        market_growth={marketData?.market_growth}
+        competitors={marketData?.competitors}
+      />
     </div>
   );
 } 

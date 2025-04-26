@@ -73,9 +73,10 @@ export interface ApiResponse<T> {
 /**
  * Fetches repository data from the backend
  * @param repoUrl GitHub repository URL
+ * @param description Repository description
  * @returns Repository data
  */
-export async function fetchRepoData(repoUrl: string): Promise<GitHubRepoData> {
+export async function fetchRepoData(repoUrl: string, description?: string): Promise<GitHubRepoData> {
   try {
     // First, initialize the repository
     const initResponse = await fetch(`${API_BASE_URL}/github`, {
@@ -83,7 +84,10 @@ export async function fetchRepoData(repoUrl: string): Promise<GitHubRepoData> {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ repo_url: repoUrl }),
+      body: JSON.stringify({ 
+        repo_url: repoUrl,
+        description: description 
+      }),
     }).catch(error => {
       console.error('Network error when initializing repository:', error);
       throw new Error('Failed to connect to the backend server. Please make sure the server is running.');
@@ -146,16 +150,17 @@ export async function fetchPitchDeckData(repoName: string): Promise<PitchDeckDat
 /**
  * Fetches market research data from the backend
  * @param repoName Repository name
+ * @param regenerate Whether to regenerate the market research
  * @returns Market research data
  */
-export async function fetchMarketResearchData(repoName: string): Promise<MarketResearchData> {
+export async function fetchMarketResearchData(repoName: string, regenerate: boolean = false): Promise<MarketResearchData> {
   try {
     const response = await fetch(`${API_BASE_URL}/github/${repoName}/market_research`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ regenerate }),
     }).catch(error => {
       console.error('Network error when fetching market research data:', error);
       throw new Error('Failed to connect to the backend server. Please make sure the server is running.');
@@ -169,6 +174,30 @@ export async function fetchMarketResearchData(repoName: string): Promise<MarketR
     return data.data;
   } catch (error) {
     console.error('Error fetching market research data:', error);
+    throw error;
+  }
+}
+
+/**
+ * Refreshes the repository data from the backend
+ * @param repoName Repository name
+ * @returns Updated repository data
+ */
+export async function refreshRepoData(repoName: string): Promise<GitHubRepoData> {
+  try {
+    const response = await fetch(`/api/repo/${repoName}`).catch(error => {
+      console.error('Network error when refreshing repository data:', error);
+      throw new Error('Failed to fetch repository data from the API route.');
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to refresh repository data: ${response.statusText}`);
+    }
+    
+    const repoData = await response.json();
+    return repoData.github_repo;
+  } catch (error) {
+    console.error('Error refreshing repository data:', error);
     throw error;
   }
 } 

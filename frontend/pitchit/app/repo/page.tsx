@@ -3,20 +3,21 @@
 import { useState, useEffect } from 'react';
 import { RepoView } from '@/components/RepoView';
 import { useSearchParams } from 'next/navigation';
-import { fetchRepoData, GitHubRepoData } from '@/lib/api';
+import { fetchRepoData, GitHubRepoData, refreshRepoData } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, Server } from 'lucide-react';
 import { checkBackendServer } from '@/lib/checkBackend';
+import { useRepoStore } from '@/lib/store';
 
 export default function RepoPage() {
-  const [repoData, setRepoData] = useState<GitHubRepoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-  const [marketResearchGenerated, setMarketResearchGenerated] = useState<boolean>(false);
   const [checkingMarketResearch, setCheckingMarketResearch] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const repoUrl = searchParams.get('url');
+
+  const { repoData, marketResearchGenerated, setRepoData, setMarketResearchGenerated } = useRepoStore();
 
   const checkServer = async () => {
     setServerStatus('checking');
@@ -25,15 +26,30 @@ export default function RepoPage() {
     return isRunning;
   };
 
-  const checkMarketResearch = async (repoName: string) => {
+  const checkMarketResearch = async (repoName: string, regenerate: boolean = false) => {
     if (checkingMarketResearch) return;
     
     try {
       setCheckingMarketResearch(true);
-      const response = await fetch(`/api/repo/${repoName}/market_research`);
+      const response = await fetch(`/api/repo/${repoName}/market_research`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ regenerate }),
+      });
+      
       if (response.ok) {
-        setMarketResearchGenerated(true);
-        return true;
+        const data = await response.json();
+        if (data.data) {
+          setMarketResearchGenerated(true);
+          // Refresh the store data to include the new market research
+          const updatedRepoData = await refreshRepoData(repoName);
+          setRepoData(updatedRepoData);
+          return true;
+        }
+        // If data is null, it means market research is being generated
+        return false;
       }
       return false;
     } catch (err) {
@@ -62,7 +78,8 @@ export default function RepoPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchRepoData(repoUrl);
+      const description = searchParams.get('description');
+      const data = await fetchRepoData(repoUrl, description || undefined);
       setRepoData(data);
       
       // Check if market research data exists in the JSON file
@@ -95,7 +112,15 @@ export default function RepoPage() {
 
   useEffect(() => {
     checkServer();
-    getRepoData();
+    // If we have a URL parameter, it takes precedence over stored data
+    if (repoUrl) {
+      getRepoData();
+    } else if (repoData) {
+      // If we have stored data but no URL parameter, redirect to the stored repo
+      window.location.href = `/repo?url=${encodeURIComponent(repoData.url)}`;
+    } else {
+      setLoading(false);
+    }
   }, [repoUrl]);
 
   if (loading) {
