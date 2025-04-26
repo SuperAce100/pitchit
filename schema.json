@@ -1,0 +1,333 @@
+{
+    "github_repo": {
+        "name": "string",
+        "description": "string",
+        "url": "string",
+        "readme": "string",
+        "created_by": "string",
+        "tree": "string"
+    },
+    "orchestrator_plan": {
+        "sub_agents": [
+            {
+                "name": "task",
+                "description": "string",
+                "trace": [
+                    {
+                        "file_explored": "string",
+                        "takeaway": "string"
+                    }
+                ]
+            }
+        ]
+    },
+    "technical_brief": {
+        "product_idea": "string",
+        "product_overview": "string",
+        "steps": [
+            {
+                "name": "string",
+                "description": "string"
+            }
+        ],
+        "features": [
+            {
+                "name": "string",
+                "description": "string"
+            }
+        ],
+        "technologies_used": [
+            {
+                "name": "string",
+                "description": "string"
+            }
+        ],
+        "x_factors": [
+            {
+                "name": "string",
+                "description": "string"
+            }
+        ]
+    },
+    "branding": {
+        "logo_url": "string",
+        "color_palette": {
+            "primary": "string",
+            "secondary": "string",
+        },
+        "font_family": "string",
+        "font_size": "string"
+    },
+    "market_research": {
+        "market_size": "string",
+        "market_growth": "string",
+        "competitors": [
+            {
+                "name": "string",
+                "description": "string",
+                "market_share": "string",
+                "strengths": "string",
+                "weaknesses": "string"
+            }
+        ]
+    },
+    "pitch_deck": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Seed Round Pitch Deck",
+        "type": "object",
+        "properties": {
+            "company_overview": {
+                "type": "object",
+                "properties": {
+                    "one_liner": {
+                        "type": "string",
+                        "description": "A concise description of what your company does."
+                    },
+                    "mission_statement": {
+                        "type": "string",
+                        "description": "Your company's mission or vision statement."
+                    }
+                }
+            },
+            "problem": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "The problem your company aims to solve."
+                    },
+                    "current_solutions": {
+                        "type": "string",
+                        "description": "Existing solutions and their shortcomings."
+                    }
+                }
+            },
+            "solution": {
+                "type": "object",
+                "properties": {
+                    "product_description": {
+                        "type": "string",
+                        "description": "Overview of your product or service."
+                    },
+                    "key_features": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "List of key features or differentiators."
+                    }
+                }
+            },
+            "market": {
+                "type": "object",
+                "properties": {
+                    "target_customers": {
+                        "type": "string",
+                        "description": "Description of your target customer segments."
+                    },
+                    "market_size": {
+                        "type": "object",
+                        "properties": {
+                            "total_addressable_market": {
+                                "type": "number",
+                                "description": "Total addressable market size in dollars."
+                            },
+                            "serviceable_addressable_market": {
+                                "type": "number",
+                                "description": "Serviceable addressable market size in dollars."
+                            }
+                        }
+                    },
+                    "market_growth": {
+                        "type": "string",
+                        "description": "Information on market growth trends."
+                    }
+                }
+            },
+            "product": {
+                "type": "object",
+                "properties": {
+                    "demo_link": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Link to a product demo or prototype."
+                    },
+                    "technology_stack": {
+                        "type": "string",
+                        "description": "Overview of the technology stack used."
+                    }
+                }
+            },
+            "business_model": {
+                "type": "object",
+                "properties": {
+                    "revenue_streams": {
+                        "type": "string",
+                        "description": "Explanation of how the company makes money."
+                    },
+                    "pricing_strategy": {
+                        "type": "string",
+                        "description": "Details of your pricing model."
+                    }
+                }
+            },
+            "traction": {
+                "type": "object",
+                "properties": {
+                    "key_metrics": {
+                        "type": "object",
+                        "properties": {
+                            "users": {
+                                "type": "number",
+                                "description": "Number of users."
+                            },
+                            "monthly_revenue": {
+                                "type": "number",
+                                "description": "Monthly revenue in dollars."
+                            },
+                            "growth_rate": {
+                                "type": "string",
+                                "description": "User or revenue growth rate."
+                            }
+                        }
+                    },
+                    "milestones": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Significant milestones achieved."
+                    }
+                }
+            },
+            "team": {
+                "type": "object",
+                "properties": {
+                    "founders": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "role": {
+                                    "type": "string"
+                                },
+                                "background": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "List of founders with roles and backgrounds."
+                    },
+                    "advisors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "List of advisors."
+                    }
+                }
+            },
+            "competition": {
+                "type": "object",
+                "properties": {
+                    "competitors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "List of main competitors."
+                    },
+                    "competitive_advantage": {
+                        "type": "string",
+                        "description": "Your company's competitive advantages."
+                    }
+                }
+            },
+            "financials": {
+                "type": "object",
+                "properties": {
+                    "historical_financials": {
+                        "type": "object",
+                        "properties": {
+                            "revenue": {
+                                "type": "number",
+                                "description": "Historical revenue in dollars."
+                            },
+                            "expenses": {
+                                "type": "number",
+                                "description": "Historical expenses in dollars."
+                            }
+                        }
+                    },
+                    "projections": {
+                        "type": "object",
+                        "properties": {
+                            "next_12_months_revenue": {
+                                "type": "number",
+                                "description": "Projected revenue for the next 12 months."
+                            },
+                            "next_12_months_expenses": {
+                                "type": "number",
+                                "description": "Projected expenses for the next 12 months."
+                            }
+                        }
+                    }
+                }
+            },
+            "funding": {
+                "type": "object",
+                "properties": {
+                    "amount_raising": {
+                        "type": "number",
+                        "description": "Amount of funding you are seeking."
+                    },
+                    "use_of_funds": {
+                        "type": "object",
+                        "properties": {
+                            "product_development": {
+                                "type": "number",
+                                "description": "Amount allocated to product development."
+                            },
+                            "marketing": {
+                                "type": "number",
+                                "description": "Amount allocated to marketing."
+                            },
+                            "hiring": {
+                                "type": "number",
+                                "description": "Amount allocated to hiring."
+                            },
+                            "other": {
+                                "type": "number",
+                                "description": "Amount allocated to other expenses."
+                            }
+                        },
+                        "description": "Breakdown of how the funds will be used."
+                    },
+                    "funding_history": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "round": {
+                                    "type": "string"
+                                },
+                                "amount": {
+                                    "type": "number"
+                                },
+                                "investors": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Details of previous funding rounds."
+                    }
+                }
+            }
+        }
+    }
