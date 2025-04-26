@@ -34,9 +34,11 @@ def test_github_clone():
         # Verify response contains expected data
         assert "data" in result, "Response missing 'data' field"
         assert "repo_path" in result["data"], "Response missing 'repo_path' field"
+        assert "json_path" in result["data"], "Response missing 'json_path' field"
         
         # Get repository path from response
         repo_path = result["data"]["repo_path"]
+        json_path = result["data"]["json_path"]
         
         # Check if directory exists
         assert os.path.exists(repo_path), f"Repository directory not found at {repo_path}"
@@ -45,7 +47,35 @@ def test_github_clone():
         git_dir = Path(repo_path) / ".git"
         assert git_dir.exists(), f"Not a git repository: .git directory not found in {repo_path}"
         
+        # Check if JSON file exists
+        assert os.path.exists(json_path), f"JSON file not found at {json_path}"
+        
+        # Validate JSON file content
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                repo_json = json.load(f)
+            
+            # Check if JSON has the expected structure
+            assert "github_repo" in repo_json, "JSON missing 'github_repo' field"
+            github_repo = repo_json["github_repo"]
+            
+            # Verify required fields
+            required_fields = ["name", "description", "url", "readme", "created_by", "tree"]
+            for field in required_fields:
+                assert field in github_repo, f"JSON missing '{field}' field in github_repo"
+            
+            # Verify some values
+            assert github_repo["name"] == result["data"]["repo_name"], "Repository name mismatch"
+            assert github_repo["url"] == result["data"]["repo_url"], "Repository URL mismatch"
+            assert github_repo["description"] == test_repo["description"], "Repository description mismatch"
+            
+            print(f"✅ JSON file validation passed: {json_path}")
+        except Exception as e:
+            print(f"❌ JSON file validation failed: {e}")
+            raise
+        
         print(f"✅ Test passed! Repository successfully cloned to {repo_path}")
+        print(f"✅ JSON file successfully created at {json_path}")
         return True
         
     except requests.exceptions.RequestException as e:
