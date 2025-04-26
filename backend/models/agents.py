@@ -5,7 +5,7 @@ from models.llms import (
     text_model,
     llm_call_with_tools,
 )
-from models.tools import Tool, tool_registry, browser_tool, terminal_tool
+from models.tools import Tool, tool_registry
 import asyncio
 from pydantic import BaseModel
 
