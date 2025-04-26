@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { RepoView } from '@/components/RepoView';
 import { useSearchParams } from 'next/navigation';
-import { fetchRepoData, GitHubRepoData, refreshRepoData } from '@/lib/api';
+import { fetchRepoData, GitHubRepoData, refreshRepoData, fetchMarketResearchData, fetchTechnicalBriefData, fetchBrandingData, fetchPitchDeckData } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, Server } from 'lucide-react';
 import { checkBackendServer } from '@/lib/checkBackend';
@@ -13,11 +13,22 @@ export default function RepoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
-  const [checkingMarketResearch, setCheckingMarketResearch] = useState<boolean>(false);
+  const [checkingComponents, setCheckingComponents] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const repoUrl = searchParams.get('url');
 
-  const { repoData, marketResearchGenerated, setRepoData, setMarketResearchGenerated } = useRepoStore();
+  const { 
+    repoData, 
+    marketResearchGenerated, 
+    technicalBriefGenerated,
+    brandingGenerated,
+    pitchDeckGenerated,
+    setRepoData, 
+    setMarketResearchGenerated,
+    setTechnicalBriefGenerated,
+    setBrandingGenerated,
+    setPitchDeckGenerated
+  } = useRepoStore();
 
   const checkServer = async () => {
     setServerStatus('checking');
@@ -26,37 +37,56 @@ export default function RepoPage() {
     return isRunning;
   };
 
-  const checkMarketResearch = async (repoName: string, regenerate: boolean = false) => {
-    if (checkingMarketResearch) return;
+  const checkComponents = async (repoName: string, regenerate: boolean = false) => {
+    if (checkingComponents) return;
     
     try {
-      setCheckingMarketResearch(true);
-      const response = await fetch(`/api/repo/${repoName}/market_research`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ regenerate }),
-      });
+      setCheckingComponents(true);
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data) {
+      // Check market research
+      if (!marketResearchGenerated) {
+        const marketResearchResponse = await fetchMarketResearchData(repoName, regenerate);
+        if (marketResearchResponse) {
           setMarketResearchGenerated(true);
-          // Refresh the store data to include the new market research
-          const updatedRepoData = await refreshRepoData(repoName);
-          setRepoData(updatedRepoData);
-          return true;
         }
-        // If data is null, it means market research is being generated
-        return false;
       }
-      return false;
+      
+      // Check technical brief
+      if (!technicalBriefGenerated) {
+        const technicalBriefResponse = await fetchTechnicalBriefData(repoName, regenerate);
+        if (technicalBriefResponse) {
+          setTechnicalBriefGenerated(true);
+        }
+      }
+      
+      // Check branding
+      if (!brandingGenerated) {
+        const brandingResponse = await fetchBrandingData(repoName, regenerate);
+        if (brandingResponse) {
+          setBrandingGenerated(true);
+        }
+      }
+      
+      // Check pitch deck
+      if (!pitchDeckGenerated) {
+        const pitchDeckResponse = await fetchPitchDeckData(repoName, regenerate);
+        if (pitchDeckResponse) {
+          setPitchDeckGenerated(true);
+        }
+      }
+      
+      // If any component was generated, refresh the repo data
+      if (marketResearchGenerated || technicalBriefGenerated || brandingGenerated || pitchDeckGenerated) {
+        const updatedRepoData = await refreshRepoData(repoName);
+        setRepoData(updatedRepoData);
+      }
+      
+      return marketResearchGenerated && technicalBriefGenerated && brandingGenerated && pitchDeckGenerated;
     } catch (err) {
-      console.error('Error checking market research data:', err);
+      console.error('Error checking components:', err);
       return false;
     } finally {
-      setCheckingMarketResearch(false);
+      setCheckingComponents(false);
     }
   };
 
@@ -82,8 +112,8 @@ export default function RepoPage() {
       const data = await fetchRepoData(repoUrl, description || undefined);
       setRepoData(data);
       
-      // Check if market research data exists in the JSON file
-      await checkMarketResearch(data.name);
+      // Check if components exist in the JSON file
+      await checkComponents(data.name);
       
       setLoading(false);
     } catch (err) {
@@ -94,21 +124,21 @@ export default function RepoPage() {
     }
   };
 
-  // Set up polling for market research data
+  // Set up polling for components
   useEffect(() => {
-    if (!repoData || marketResearchGenerated) return;
+    if (!repoData || (marketResearchGenerated && technicalBriefGenerated && brandingGenerated && pitchDeckGenerated)) return;
     
     const intervalId = setInterval(async () => {
       if (repoData) {
-        const isGenerated = await checkMarketResearch(repoData.name);
-        if (isGenerated) {
+        const allGenerated = await checkComponents(repoData.name);
+        if (allGenerated) {
           clearInterval(intervalId);
         }
       }
     }, 5000); // Check every 5 seconds
     
     return () => clearInterval(intervalId);
-  }, [repoData, marketResearchGenerated]);
+  }, [repoData, marketResearchGenerated, technicalBriefGenerated, brandingGenerated, pitchDeckGenerated]);
 
   useEffect(() => {
     checkServer();
@@ -174,7 +204,13 @@ export default function RepoPage() {
 
   return (
     <div className="mx-auto min-h-screen max-w-[min(80%,64rem)]">
-      <RepoView {...repoData} market_research_generated={marketResearchGenerated} />
+      <RepoView 
+        {...repoData} 
+        market_research_generated={marketResearchGenerated}
+        technical_brief_generated={technicalBriefGenerated}
+        branding_generated={brandingGenerated}
+        pitch_deck_generated={pitchDeckGenerated}
+      />
     </div>
   );
 }

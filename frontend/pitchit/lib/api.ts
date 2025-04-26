@@ -65,6 +65,19 @@ export interface PitchDeckData {
   };
 }
 
+export interface TechnicalBriefData {
+  architecture: string;
+  technologies: string[];
+  key_features: string[];
+}
+
+export interface BrandingData {
+  name: string;
+  tagline: string;
+  color_palette: string[];
+  target_audience: string;
+}
+
 export interface ApiResponse<T> {
   message: string;
   data: T;
@@ -174,6 +187,68 @@ export async function fetchMarketResearchData(repoName: string, regenerate: bool
     return data.data;
   } catch (error) {
     console.error('Error fetching market research data:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches technical brief data from the backend
+ * @param repoName Repository name
+ * @param regenerate Whether to regenerate the technical brief
+ * @returns Technical brief data
+ */
+export async function fetchTechnicalBriefData(repoName: string, regenerate: boolean = false): Promise<TechnicalBriefData> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/github/${repoName}/technical_brief`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ regenerate }),
+    }).catch(error => {
+      console.error('Network error when fetching technical brief data:', error);
+      throw new Error('Failed to connect to the backend server. Please make sure the server is running.');
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch technical brief data: ${response.statusText}`);
+    }
+
+    const data: ApiResponse<TechnicalBriefData> = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching technical brief data:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetches branding data from the backend
+ * @param repoName Repository name
+ * @param regenerate Whether to regenerate the branding
+ * @returns Branding data
+ */
+export async function fetchBrandingData(repoName: string, regenerate: boolean = false): Promise<BrandingData> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/github/${repoName}/branding`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ regenerate }),
+    }).catch(error => {
+      console.error('Network error when fetching branding data:', error);
+      throw new Error('Failed to connect to the backend server. Please make sure the server is running.');
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch branding data: ${response.statusText}`);
+    }
+
+    const data: ApiResponse<BrandingData> = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching branding data:', error);
     throw error;
   }
 }

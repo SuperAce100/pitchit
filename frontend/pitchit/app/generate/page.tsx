@@ -70,7 +70,6 @@ export default function GeneratePage() {
       // Call the backend API to initialize the repository
       const response = await axios.post('http://localhost:8000/github', {
         repo_url: query,
-        description: "A GitHub repository for pitch generation"
       });
       
       setIsLoading(false);

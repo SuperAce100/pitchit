@@ -121,6 +121,139 @@ def generate_market_research_async(repo_name: str, description: str, json_path: 
     except Exception as e:
         print(f"Error generating market research: {str(e)}")
 
+def generate_all_components_async(repo_name: str, description: str, json_path: str, regenerate: bool = False):
+    """Generate all components asynchronously in parallel"""
+    try:
+        # Read current data
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        # Create threads for each component
+        threads = []
+        
+        # Market Research
+        if regenerate or "market_research" not in repo_data:
+            market_research_thread = threading.Thread(
+                target=generate_market_research_async,
+                args=(repo_name, description, json_path),
+                daemon=True
+            )
+            threads.append(market_research_thread)
+        
+        # Technical Brief
+        if regenerate or "technical_brief" not in repo_data:
+            technical_brief_thread = threading.Thread(
+                target=generate_technical_brief_async,
+                args=(repo_name, json_path),
+                daemon=True
+            )
+            threads.append(technical_brief_thread)
+        
+        # Branding
+        if regenerate or "branding" not in repo_data:
+            branding_thread = threading.Thread(
+                target=generate_branding_async,
+                args=(repo_name, json_path),
+                daemon=True
+            )
+            threads.append(branding_thread)
+        
+        # Pitch Deck
+        if regenerate or "pitch_deck" not in repo_data:
+            pitch_deck_thread = threading.Thread(
+                target=generate_pitch_deck_async,
+                args=(repo_name, json_path),
+                daemon=True
+            )
+            threads.append(pitch_deck_thread)
+        
+        # Start all threads
+        for thread in threads:
+            thread.start()
+        
+        return len(threads) > 0
+        
+    except Exception as e:
+        print(f"Error in generate_all_components_async: {str(e)}")
+        return False
+
+def generate_technical_brief_async(repo_name: str, json_path: str):
+    """Generate technical brief data asynchronously"""
+    try:
+        print(f"Generating technical brief for {repo_name}")
+        brief_data = {
+            "architecture": "Microservices",
+            "technologies": ["Python", "FastAPI", "React", "PostgreSQL"],
+            "key_features": ["User authentication", "Data visualization", "API integration"],
+        }
+        
+        # Update the JSON file with technical brief data
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        repo_data["technical_brief"] = brief_data
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(repo_data, f, indent=4)
+        
+        print(f"Technical brief for {repo_name} generated successfully")
+    except Exception as e:
+        print(f"Error generating technical brief: {str(e)}")
+
+def generate_branding_async(repo_name: str, json_path: str):
+    """Generate branding data asynchronously"""
+    try:
+        print(f"Generating branding for {repo_name}")
+        branding_data = {
+            "name": f"{repo_name.capitalize()} Solutions",
+            "tagline": "Innovative solutions for modern problems",
+            "color_palette": ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"],
+            "target_audience": "Tech-savvy professionals",
+        }
+        
+        # Update the JSON file with branding data
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        repo_data["branding"] = branding_data
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(repo_data, f, indent=4)
+        
+        print(f"Branding for {repo_name} generated successfully")
+    except Exception as e:
+        print(f"Error generating branding: {str(e)}")
+
+def generate_pitch_deck_async(repo_name: str, json_path: str):
+    """Generate pitch deck data asynchronously"""
+    try:
+        print(f"Generating pitch deck for {repo_name}")
+        pitch_deck_data = {
+            "slides": [
+                {"title": "Introduction", "content": f"Introducing {repo_name.capitalize()}"},
+                {"title": "Problem", "content": "The problem we're solving"},
+                {"title": "Solution", "content": "Our innovative solution"},
+                {"title": "Market", "content": "Market size and opportunity"},
+                {"title": "Business Model", "content": "How we make money"},
+                {"title": "Team", "content": "Our exceptional team"},
+                {"title": "Ask", "content": "What we're looking for"},
+            ],
+            "download_url": f"/api/download/pitch_deck/{repo_name}",
+        }
+        
+        # Update the JSON file with pitch deck data
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        repo_data["pitch_deck"] = pitch_deck_data
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(repo_data, f, indent=4)
+        
+        print(f"Pitch deck for {repo_name} generated successfully")
+    except Exception as e:
+        print(f"Error generating pitch deck: {str(e)}")
+
 @app.post("/github", response_model=PitchResponse)
 def initialize_github_repo(repo: GitHubRepo):
     repo_name = extract_repo_name(repo.repo_url)
@@ -142,7 +275,10 @@ def initialize_github_repo(repo: GitHubRepo):
                     "repo_url": str(repo.repo_url),
                     "repo_path": os.path.join("..", ".data", f"{repo_name}"),
                     "json_path": json_path,
-                    "market_research_generated": "market_research" in repo_data
+                    "market_research_generated": "market_research" in repo_data,
+                    "technical_brief_generated": "technical_brief" in repo_data,
+                    "branding_generated": "branding" in repo_data,
+                    "pitch_deck_generated": "pitch_deck" in repo_data
                 }
             )
         
@@ -157,13 +293,9 @@ def initialize_github_repo(repo: GitHubRepo):
             description=repo.description
         )
         
-        # Start market research generation in a separate thread
+        # Start all component generation in parallel
         if repo.description:
-            threading.Thread(
-                target=generate_market_research_async,
-                args=(repo_name, repo.description, json_path),
-                daemon=True
-            ).start()
+            generate_all_components_async(repo_name, repo.description, json_path)
         
         return PitchResponse(
             message=f"GitHub repo '{repo_name}' initialized successfully",
@@ -172,7 +304,10 @@ def initialize_github_repo(repo: GitHubRepo):
                 "repo_url": str(repo.repo_url),
                 "repo_path": repo_path,
                 "json_path": json_path,
-                "market_research_generated": False
+                "market_research_generated": False,
+                "technical_brief_generated": False,
+                "branding_generated": False,
+                "pitch_deck_generated": False
             }
         )
     except Exception as e:
@@ -202,40 +337,7 @@ def get_orchestrator_plan(repo_name: str, additional_info: Dict[str, Any] = Body
 
 @app.post("/github/{repo_name}/technical_brief", response_model=PitchResponse)
 def get_technical_brief(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate the technical brief
-    brief_data = {
-        "architecture": "Microservices",
-        "technologies": ["Python", "FastAPI", "React", "PostgreSQL"],
-        "key_features": ["User authentication", "Data visualization", "API integration"],
-        # Add more technical details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Technical brief for '{repo_name}' generated successfully",
-        data=brief_data
-    )
-
-@app.post("/github/{repo_name}/branding", response_model=PitchResponse)
-def get_branding(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate branding information
-    branding_data = {
-        "name": f"{repo_name.capitalize()} Solutions",
-        "tagline": "Innovative solutions for modern problems",
-        "color_palette": ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"],
-        "target_audience": "Tech-savvy professionals",
-        # Add more branding details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Branding for '{repo_name}' generated successfully",
-        data=branding_data
-    )
-
-@app.post("/github/{repo_name}/market_research", response_model=PitchResponse)
-def get_market_research(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    print(f"Getting market research for {repo_name}")
     try:
-        # Check if market research data exists in the JSON file
         json_dir = os.path.join("..", ".data", "repo_data")
         json_path = os.path.join(json_dir, f"{repo_name}.json")
         
@@ -245,26 +347,116 @@ def get_market_research(repo_name: str, additional_info: Dict[str, Any] = Body({
         with open(json_path, 'r', encoding='utf-8') as f:
             repo_data = json.load(f)
         
-        # If regenerate flag is set or market research doesn't exist, generate it
         should_regenerate = additional_info.get('regenerate', False)
-        if should_regenerate or "market_research" not in repo_data:
+        if should_regenerate:
+            # Regenerate all components
+            generate_all_components_async(repo_name, repo_data["github_repo"]["readme"], json_path, regenerate=True)
+            return PitchResponse(
+                message=f"Regenerating all components for '{repo_name}'",
+                data=None
+            )
+        
+        if "technical_brief" not in repo_data:
             if "github_repo" in repo_data and "readme" in repo_data["github_repo"]:
                 description = repo_data["github_repo"]["readme"]
                 if description:
-                    # Start market research generation in a separate thread
-                    threading.Thread(
-                        target=generate_market_research_async,
-                        args=(repo_name, description, json_path),
-                        daemon=True
-                    ).start()
-                    
+                    generate_all_components_async(repo_name, description, json_path)
                     return PitchResponse(
-                        message=f"Market research for '{repo_name}' is being generated",
+                        message=f"Generating all components for '{repo_name}'",
                         data=None
                     )
-    
         
-        # If we get here, something went wrong with generation
+        if "technical_brief" in repo_data:
+            return PitchResponse(
+                message=f"Technical brief for '{repo_name}' retrieved successfully",
+                data=repo_data["technical_brief"]
+            )
+        
+        raise HTTPException(status_code=500, detail="Failed to generate technical brief")
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get technical brief: {str(e)}")
+
+@app.post("/github/{repo_name}/branding", response_model=PitchResponse)
+def get_branding(repo_name: str, additional_info: Dict[str, Any] = Body({})):
+    try:
+        json_dir = os.path.join("..", ".data", "repo_data")
+        json_path = os.path.join(json_dir, f"{repo_name}.json")
+        
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail=f"Repository '{repo_name}' not found")
+        
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        should_regenerate = additional_info.get('regenerate', False)
+        if should_regenerate:
+            # Regenerate all components
+            generate_all_components_async(repo_name, repo_data["github_repo"]["readme"], json_path, regenerate=True)
+            return PitchResponse(
+                message=f"Regenerating all components for '{repo_name}'",
+                data=None
+            )
+        
+        if "branding" not in repo_data:
+            if "github_repo" in repo_data and "readme" in repo_data["github_repo"]:
+                description = repo_data["github_repo"]["readme"]
+                if description:
+                    generate_all_components_async(repo_name, description, json_path)
+                    return PitchResponse(
+                        message=f"Generating all components for '{repo_name}'",
+                        data=None
+                    )
+        
+        if "branding" in repo_data:
+            return PitchResponse(
+                message=f"Branding for '{repo_name}' retrieved successfully",
+                data=repo_data["branding"]
+            )
+        
+        raise HTTPException(status_code=500, detail="Failed to generate branding")
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get branding: {str(e)}")
+
+@app.post("/github/{repo_name}/market_research", response_model=PitchResponse)
+def get_market_research(repo_name: str, additional_info: Dict[str, Any] = Body({})):
+    print(f"Getting market research for {repo_name}")
+    try:
+        json_dir = os.path.join("..", ".data", "repo_data")
+        json_path = os.path.join(json_dir, f"{repo_name}.json")
+        
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail=f"Repository '{repo_name}' not found")
+        
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        should_regenerate = additional_info.get('regenerate', False)
+        if should_regenerate:
+            # Regenerate all components
+            generate_all_components_async(repo_name, repo_data["github_repo"]["readme"], json_path, regenerate=True)
+            return PitchResponse(
+                message=f"Regenerating all components for '{repo_name}'",
+                data=None
+            )
+        
+        if "market_research" not in repo_data:
+            if "github_repo" in repo_data and "readme" in repo_data["github_repo"]:
+                description = repo_data["github_repo"]["readme"]
+                if description:
+                    generate_all_components_async(repo_name, description, json_path)
+                    return PitchResponse(
+                        message=f"Generating all components for '{repo_name}'",
+                        data=None
+                    )
+        
+        if "market_research" in repo_data:
+            return PitchResponse(
+                message=f"Market research for '{repo_name}' retrieved successfully",
+                data=repo_data["market_research"]
+            )
+        
         raise HTTPException(status_code=500, detail="Failed to generate market research")
         
     except Exception as e:
@@ -272,25 +464,45 @@ def get_market_research(repo_name: str, additional_info: Dict[str, Any] = Body({
 
 @app.post("/github/{repo_name}/pitch_deck", response_model=PitchResponse)
 def get_pitch_deck(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate pitch deck
-    pitch_deck_data = {
-        "slides": [
-            {"title": "Introduction", "content": f"Introducing {repo_name.capitalize()}"},
-            {"title": "Problem", "content": "The problem we're solving"},
-            {"title": "Solution", "content": "Our innovative solution"},
-            {"title": "Market", "content": "Market size and opportunity"},
-            {"title": "Business Model", "content": "How we make money"},
-            {"title": "Team", "content": "Our exceptional team"},
-            {"title": "Ask", "content": "What we're looking for"},
-        ],
-        "download_url": f"/api/download/pitch_deck/{repo_name}",
-        # Add more pitch deck details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Pitch deck for '{repo_name}' generated successfully",
-        data=pitch_deck_data
-    )
+    try:
+        json_dir = os.path.join("..", ".data", "repo_data")
+        json_path = os.path.join(json_dir, f"{repo_name}.json")
+        
+        if not os.path.exists(json_path):
+            raise HTTPException(status_code=404, detail=f"Repository '{repo_name}' not found")
+        
+        with open(json_path, 'r', encoding='utf-8') as f:
+            repo_data = json.load(f)
+        
+        should_regenerate = additional_info.get('regenerate', False)
+        if should_regenerate:
+            # Regenerate all components
+            generate_all_components_async(repo_name, repo_data["github_repo"]["readme"], json_path, regenerate=True)
+            return PitchResponse(
+                message=f"Regenerating all components for '{repo_name}'",
+                data=None
+            )
+        
+        if "pitch_deck" not in repo_data:
+            if "github_repo" in repo_data and "readme" in repo_data["github_repo"]:
+                description = repo_data["github_repo"]["readme"]
+                if description:
+                    generate_all_components_async(repo_name, description, json_path)
+                    return PitchResponse(
+                        message=f"Generating all components for '{repo_name}'",
+                        data=None
+                    )
+        
+        if "pitch_deck" in repo_data:
+            return PitchResponse(
+                message=f"Pitch deck for '{repo_name}' retrieved successfully",
+                data=repo_data["pitch_deck"]
+            )
+        
+        raise HTTPException(status_code=500, detail="Failed to generate pitch deck")
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get pitch deck: {str(e)}")
 
 def main():
     uvicorn.run(app, host="127.0.0.1", port=8000)

@@ -16,9 +16,23 @@ interface GitHubRepoProps {
   created_by: string;
   tree: string;
   market_research_generated?: boolean;
+  technical_brief_generated?: boolean;
+  branding_generated?: boolean;
+  pitch_deck_generated?: boolean;
 }
 
-export function RepoView({ name, description, url, readme, created_by, tree, market_research_generated = false }: GitHubRepoProps) {
+export function RepoView({ 
+  name, 
+  description, 
+  url, 
+  readme, 
+  created_by, 
+  tree, 
+  market_research_generated = false,
+  technical_brief_generated = false,
+  branding_generated = false,
+  pitch_deck_generated = false
+}: GitHubRepoProps) {
   // Format the URL if needed
   const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
   
@@ -91,21 +105,30 @@ export function RepoView({ name, description, url, readme, created_by, tree, mar
             </Button>
           </Link>
           <Link href={`/technical?repo=${name}`}>
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2" disabled={!technical_brief_generated}>
               <FileText className="h-4 w-4" />
               Technical Brief
+              {!technical_brief_generated && (
+                <Badge variant="secondary" className="ml-2">Generating...</Badge>
+              )}
             </Button>
           </Link>
           <Link href={`/branding?repo=${name}`}>
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2" disabled={!branding_generated}>
               <Presentation className="h-4 w-4" />
               Branding
+              {!branding_generated && (
+                <Badge variant="secondary" className="ml-2">Generating...</Badge>
+              )}
             </Button>
           </Link>
           <Link href={`/deck?repo=${name}`}>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2" disabled={!pitch_deck_generated}>
               <Presentation className="h-4 w-4" />
               Pitch Deck
+              {!pitch_deck_generated && (
+                <Badge variant="secondary" className="ml-2">Generating...</Badge>
+              )}
             </Button>
           </Link>
         </CardFooter>
