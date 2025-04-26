@@ -4,10 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { ExternalLink, Github, Calendar, User, FileText } from 'lucide-react';
-import { Tree, Folder, File } from "@/components/ui/file-tree";
+import { ExternalLink, Github, Calendar, User, FileText, Presentation } from 'lucide-react';
 import { Markdown } from "@/components/ui/markdown";
+import Link from 'next/link';
 
 interface GitHubRepoProps {
   name: string;
@@ -65,29 +64,20 @@ export function RepoView({ name, description, url, readme, created_by, tree }: G
             </TabsList>
             
             <TabsContent value="readme" className="mt-4">
-              <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  {readme ? (
-                    <Markdown content={readme}>{readme}</Markdown>
-                  ) : (
-                    <p className="text-muted-foreground">No README available</p>
-                  )}
-                </div>
-              </ScrollArea>
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                {readme ? (
+                  <Markdown content={readme}>{readme}</Markdown>
+                ) : (
+                  <p className="text-muted-foreground">No README available</p>
+                )}
+              </div>
             </TabsContent>
             
             <TabsContent value="files" className="mt-4">
-              <ScrollArea className="h-[400px] w-full rounded-md border p-4 font-mono">
-                <p className="whitespace-pre-wrap">{tree}</p>
-              </ScrollArea>
+              <p className="whitespace-pre-wrap font-mono">{tree}</p>
             </TabsContent>
           </Tabs>
         </CardContent>
-        
-        <CardFooter className="flex justify-between pt-4">
-          <Button variant="outline">Download ZIP</Button>
-          <Button>Generate Pitch Deck</Button>
-        </CardFooter>
       </Card>
     </div>
   );

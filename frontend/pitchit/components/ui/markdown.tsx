@@ -5,7 +5,8 @@ import ReactMarkdown, { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { Button } from "./button";
-
+import { Copy } from "lucide-react";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface MarkdownProps {
   content: string;
@@ -102,7 +103,7 @@ export function Markdown({ children, className }: MarkdownProps) {
             </Button>
             <SyntaxHighlighter
               language={match[1]}
-              style={customSyntaxTheme}
+              style={oneDark}
               PreTag="div"
               className="rounded-lg border border-border bg-background shadow-sm"
             >

@@ -3,64 +3,62 @@
 import { PitchDeckView } from '@/components/PitchDeckView';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
-
-// This is mock data - in a real app, this would come from an API or database
-const mockPitchDeckData = {
-  slide_1_title: {
-    company_name: "PitchIt",
-    tagline: "AI-powered pitch deck generator for startups"
-  },
-  slide_2_problem: {
-    problem_statement: "Creating a professional pitch deck is time-consuming and expensive. Entrepreneurs spend countless hours perfecting their pitch decks or pay thousands to agencies.",
-    why_now: "With the rise of AI and the increasing number of startups, there's a growing need for efficient, cost-effective solutions to create compelling pitch decks."
-  },
-  slide_3_solution: {
-    product_overview: "PitchIt is an AI-powered platform that generates customized pitch decks based on your business data, saving you time and money.",
-    key_features: [
-      "AI-powered content generation",
-      "Professional templates",
-      "Real-time collaboration",
-      "Custom branding options"
-    ],
-    unique_value_proposition: "Unlike traditional agencies or generic templates, PitchIt combines AI technology with industry expertise to create pitch decks that stand out."
-  },
-  slide_4_market_opportunity: {
-    target_market: "Early-stage startups and entrepreneurs seeking funding",
-    market_size: "$5B total addressable market with $1B serviceable market",
-    market_growth: "20% YoY growth in startup formation, creating increasing demand for pitch deck services"
-  },
-  slide_5_product_demonstration: {
-    how_it_works: "Users input their business information through our intuitive interface. Our AI analyzes the data and generates a professional pitch deck with compelling narratives and visuals.",
-    user_experience_highlights: "Simple 3-step process: Input data, customize design, export presentation. No design skills required."
-  },
-  slide_6_business_model: {
-    revenue_streams: "Subscription-based SaaS model with tiered pricing plans",
-    pricing_strategy: "Freemium model with premium features for professional users. Enterprise plans for agencies and accelerators."
-  },
-  slide_7_roadmap: {
-    milestones_achieved: [
-      "Launched MVP",
-      "Reached 10,000 users",
-      "Secured seed funding"
-    ],
-    future_plans: [
-      "Launch advanced AI features",
-      "Expand to international markets",
-      "Develop mobile app"
-    ]
-  },
-  slide_8_call_to_action: {
-    funding_needs: "$2M Seed Round",
-    use_of_funds: "Product development (40%), Marketing (25%), Hiring (25%), Other (10%)",
-    vision_statement: "To become the go-to platform for pitch deck creation, empowering entrepreneurs worldwide to tell their stories effectively."
-  }
-};
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, AlertCircle, RefreshCw, Server } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { fetchPitchDeckData, PitchDeckData } from '@/lib/api';
+import { checkBackendServer } from '@/lib/checkBackend';
 
 export default function DeckPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [pitchDeckData, setPitchDeckData] = useState<PitchDeckData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const searchParams = useSearchParams();
+  const repoName = searchParams.get('repo');
   const totalSlides = 8; // Total number of slides
+
+  const checkServer = async () => {
+    setServerStatus('checking');
+    const isRunning = await checkBackendServer();
+    setServerStatus(isRunning ? 'online' : 'offline');
+    return isRunning;
+  };
+
+  const getPitchDeckData = async () => {
+    if (!repoName) {
+      setError('No repository name provided');
+      setLoading(false);
+      return;
+    }
+    
+    // Check if the backend server is running
+    const isServerRunning = await checkServer();
+    if (!isServerRunning) {
+      setError('Backend server is not running. Please start the server and try again.');
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchPitchDeckData(repoName);
+      setPitchDeckData(data);
+      setLoading(false);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch pitch deck data';
+      setError(errorMessage);
+      setLoading(false);
+      console.error('Error fetching pitch deck data:', err);
+    }
+  };
+
+  useEffect(() => {
+    checkServer();
+    getPitchDeckData();
+  }, [repoName]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -89,11 +87,62 @@ export default function DeckPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="flex items-center gap-2 text-destructive text-xl mb-4">
+          <AlertCircle className="h-6 w-6" />
+          <span>{error}</span>
+        </div>
+        {serverStatus === 'offline' && (
+          <div className="flex items-center gap-2 text-amber-500 mb-4">
+            <Server className="h-5 w-5" />
+            <span>Backend server is offline</span>
+          </div>
+        )}
+        <div className="flex flex-col items-center gap-4">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => getPitchDeckData()}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </Button>
+          <a href="/repo" className="text-primary hover:underline">
+            Go back to repository page
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!pitchDeckData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="text-xl mb-4">No pitch deck data available</div>
+        <a href="/repo" className="text-primary hover:underline">
+          Go back to repository page
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-4">
       <div className="mx-auto max-w-[min(80%,64rem)]">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-4xl tracking-tight mt-12">Pitch Deck</h1>
+          <h1 className="text-4xl tracking-tight mt-12">
+            {repoName ? `${repoName} Pitch Deck` : 'Pitch Deck'}
+          </h1>
           <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
@@ -106,7 +155,7 @@ export default function DeckPage() {
           </div>
         </div>
         <div className="rounded-lg overflow-hidden shadow-md">
-          <PitchDeckView {...mockPitchDeckData} />
+          <PitchDeckView {...pitchDeckData} />
         </div>
         <div className="mt-4 text-center text-sm text-gray-500">
           <p>Use arrow keys to navigate • Press 'F' for fullscreen</p>

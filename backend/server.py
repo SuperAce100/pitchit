@@ -8,14 +8,24 @@ import json
 from pathlib import Path
 import uvicorn
 import orchestrator
+from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(str(Path(__file__).parent))
 from main import clone_github_repo
 
 app = FastAPI(title="Pitch it", description="Pitch it is a platform for creating and sharing pitches.")
 
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 class GitHubRepo(BaseModel):
-    repo_url: HttpUrl
+    repo_url: str
     description: Optional[str] = None
 
 class PitchResponse(BaseModel):
@@ -209,7 +219,7 @@ def get_pitch_deck(repo_name: str, additional_info: Dict[str, Any] = Body({})):
     )
 
 def main():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
 
 if __name__ == "__main__":
     main()
