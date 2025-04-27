@@ -1,11 +1,11 @@
 import os
-from models.llms import (
+from backend.models.llms import (
     llm_call_messages,
     llm_call_messages_async,
     text_model,
     llm_call_with_tools,
 )
-from models.tools import Tool, tool_registry
+from backend.models.tools import Tool, tool_registry
 import asyncio
 from pydantic import BaseModel
 

@@ -1,225 +1,165 @@
-from fastapi import FastAPI, HTTPException, Body
-from pydantic import BaseModel, HttpUrl
-from typing import Optional, Dict, Any
-import re
-import sys
-import os
+import asyncio
 import json
+import os
+import subprocess
+from typing import List
+import uuid
 from pathlib import Path
-import uvicorn
-import orchestrator
-from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from directory_tree import DisplayTree
 
-sys.path.append(str(Path(__file__).parent))
-from main import clone_github_repo
+from backend.models.agents import Agent
+from backend.models.agents import AgentConfig
+from backend.models.llms import llm_call
+from backend.models.tools import tool_registry
+from backend.models.tools.file_traversal import set_current_path
+import chainlit as cl
 
-app = FastAPI(title="Pitch it", description="Pitch it is a platform for creating and sharing pitches.")
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
-)
-
-class GitHubRepo(BaseModel):
-    repo_url: str
-    description: Optional[str] = None
-
-class PitchResponse(BaseModel):
-    message: str
-    data: Optional[Dict[str, Any]] = None
-
-@app.get("/")
-def read_root():
-    return {"message": "Loading..."}
-
-def extract_repo_name(repo_url: str) -> str:
-    """Extract repository name from GitHub URL."""
-    pattern = r"github\.com/[^/]+/([^/]+)"
-    match = re.search(pattern, str(repo_url))
-    if not match:
-        raise HTTPException(status_code=400, detail="Invalid GitHub repository URL")
-    return match.group(1)
-
-def extract_username(repo_url: str) -> str:
-    """Extract username from GitHub URL."""
-    pattern = r"github\.com/([^/]+)/[^/]+"
-    match = re.search(pattern, str(repo_url))
-    if not match:
-        raise HTTPException(status_code=400, detail="Invalid GitHub repository URL")
-    return match.group(1)
-
-def create_repo_json(repo_url: str, repo_name: str, repo_path: str, description: Optional[str] = None) -> object:
-    # Extract username from the URL
-    username = extract_username(repo_url)
+def clone_github_repo(repo_url, repo_name):
+    unique_id = str(uuid.uuid4())
     
-    # Read README content if it exists
-    readme_content = ""
-    readme_paths = [
-        os.path.join(repo_path, "README.md"),
-        os.path.join(repo_path, "Readme.md"),
-        os.path.join(repo_path, "readme.md")
-    ]
+    data_dir = Path(".data")
+    repo_dir = data_dir / f"{repo_name}_{unique_id}"
     
-    for readme_path in readme_paths:
-        if os.path.exists(readme_path):
-            try:
-                with open(readme_path, 'r', encoding='utf-8') as f:
-                    readme_content = f.read()
-                break
-            except Exception as e:
-                print(f"Error reading README: {str(e)}")
-    
-    
-    tree_structure = orchestrator.create_orchestrator_plan(repo_path)
-    
-    # Create repository data according to schema
-    repo_data = {
-        "github_repo": {
-            "name": repo_name,
-            "description": description or "",
-            "url": str(repo_url),
-            "readme": readme_content,
-            "created_by": username,
-            "tree": tree_structure
-        }
-    }
-    
-    # Create a directory for storing JSON files if it doesn't exist
-    json_dir = os.path.join("..", ".data", "repo_data")
-    os.makedirs(json_dir, exist_ok=True)
-    
-    # Save the data to a JSON file
-    json_path = os.path.join(json_dir, f"{repo_name}.json")
-    with open(json_path, 'w', encoding='utf-8') as f:
-        json.dump(repo_data, f, indent=4)
-    
-    return json_path
-
-@app.post("/github", response_model=PitchResponse)
-def initialize_github_repo(repo: GitHubRepo):
-    repo_name = extract_repo_name(repo.repo_url)
+    os.makedirs(data_dir, exist_ok=True)
     
     try:
-        # Clone the repository and get the path
-        repo_path = clone_github_repo(str(repo.repo_url), repo_name)
-        
-        # Create JSON file for the repository
-        json_path = create_repo_json(
-            repo_url=str(repo.repo_url),
-            repo_name=repo_name,
-            repo_path=repo_path,
-            description=repo.description
+        subprocess.run(
+            ["git", "clone", repo_url, str(repo_dir)],
+            check=True,
+            capture_output=True,
+            text=True
         )
+        print(f"Successfully cloned {repo_url} to {repo_dir}")
+        repo_path = str(repo_dir)
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to clone repository: {e.stderr}")
+        raise RuntimeError(f"Failed to clone repository: {e.stderr}")
+    
+    # Read the README.md file if it exists
+    readme_path = Path(repo_path) / "README.md"
+    readme_content = None
+    if readme_path.exists():
+        try:
+            with open(readme_path, 'r', encoding='utf-8') as f:
+                readme_content = f.read()
+        except Exception as e:
+            print(f"Error reading README.md: {str(e)}")
+            readme_content = None
+
+    tree = DisplayTree(
+        dirPath=repo_path,
+        stringRep=True,
+        showHidden=False,
+        ignoreList = ".git"
+    )
+
+    repo_data = {
+        "repo_path": repo_path,
+        "repo_name": repo_name,
+        "repo_url": repo_url,
+        "readme_content": readme_content,
+        "tree": tree
+    }
+
+    return repo_data
+
+
+class Branch(BaseModel):
+    name: str
+    description: str
+    files: List[str]
+
+class BranchList(BaseModel):
+    branches: List[Branch]
+
+
+def create_orchestrator_branches(tree: str):
+    response = llm_call(
+        prompt=f"Break this tree structure into branches that can be explored by sub-agents: {tree}",
+        system_prompt="""
+        You are a helpful assistant that creates branches for the 
+        given tree structure. The maximum number of branches is 3. 
+        For each branch, you should provide a name,
+        description and a list of files that will be explored. The maximum number of
+        files that can be explored in each branch is 3. The name
+        should be a two-word phrase that captures the purpose of the branch.
+        The description should be a short description of the purpose and goals
+        of exploring the branch. The files should be a list of files that will
+        be explored.
+        """,
+        response_format=BranchList
+    )
+    return response
+
+def create_sub_agents(response: BranchList, repo_path: str) -> str:
+    set_current_path(repo_path)
+    instructions = response.branches
+
+    system_prompt = """
+    You are a helpful assistant that explores a branch of a codebase. 
+    You will be given a branch of a codebase and a list of files that will be explored.
+    You will need to use the tools provided to explore the branch by going into each file, 
+    reading it, and then understanding the code semantically.
+    The results should include the file that was explored, the takeaway from the exploration,
+    and the path to the file. 
+    """ 
+
+    config = AgentConfig(
+        name="agent", system_prompt=system_prompt, description="", 
+        tools=["ls", "cd", "read_file", "pwd"]
+    )
+
+    full_response = ""
+    
+    async def process_instruction(instruction):
+        print(f"New Agent Processing instruction: {instruction.name}")
+        print(f"starting at path: {repo_path}")
+        set_current_path(repo_path)
+        agent = Agent.from_config(config)
         
-        return PitchResponse(
-            message=f"GitHub repo '{repo_name}' initialized successfully",
-            data={
-                "repo_name": repo_name, 
-                "repo_url": str(repo.repo_url),
-                "repo_path": repo_path,
-                "json_path": json_path
-            }
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to clone repository: {str(e)}")
+        content = f"Explore branch: {instruction.name}\n\nDescription: {instruction.description}\n\nFiles to explore:\n" + \
+                  "\n".join([f"- {file}" for file in instruction.files])
+        
+        await cl.Message(content=f"### Exploring {instruction.name}\n\n {instruction.description}\n\nFiles to explore:\n" + \
+                  "\n".join([f"- {file}" for file in instruction.files]), author="AI").send()
+        
+        return agent.call_with_tools(content)
     
-    
+    for instruction in instructions:
+        result = asyncio.run(process_instruction(instruction))
+        full_response += result
 
-@app.post("/github/{repo_name}/orchestrator_plan", response_model=PitchResponse)
-def get_orchestrator_plan(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate the orchestrator plan
-    plan_data = {
-        "steps": [
-            "Analyze repository code and structure",
-            "Generate technical brief",
-            "Create branding guidelines",
-            "Conduct market research",
-            "Prepare pitch deck"
-        ],
-        "timeline": "2 weeks",
-        # Add more plan details as needed
-    }
+    return full_response # this should be put into json file
+
+class TechnicalBrief(BaseModel):
+    product_idea: str
+    product_overview: str
+    steps: List[str]
+    features: List[str]
+    technologies_used: List[str]
+    x_factors: List[str]
+
+def create_technical_brief(repo_name: str, full_response: str) -> str:
+    system_prompt = f"""
+    Based on the following information about the repository '{repo_name}', create a comprehensive technical brief:
     
-    return PitchResponse(
-        message=f"Orchestrator plan for '{repo_name}' generated successfully",
-        data=plan_data
+    {full_response}
+    
+    The technical brief should include:
+    1. A concise product idea
+    2. A product overview
+    3. Key steps in the development or usage process
+    4. Main features of the product
+    5. Technologies used in the project
+    6. X-factors or unique selling points
+    
+    Format your response as a structured JSON object.
+    """
+
+    brief = llm_call(
+        prompt=system_prompt,
+        response_format=TechnicalBrief
     )
 
-@app.post("/github/{repo_name}/technical_brief", response_model=PitchResponse)
-def get_technical_brief(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate the technical brief
-    brief_data = {
-        "architecture": "Microservices",
-        "technologies": ["Python", "FastAPI", "React", "PostgreSQL"],
-        "key_features": ["User authentication", "Data visualization", "API integration"],
-        # Add more technical details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Technical brief for '{repo_name}' generated successfully",
-        data=brief_data
-    )
-
-@app.post("/github/{repo_name}/branding", response_model=PitchResponse)
-def get_branding(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate branding information
-    branding_data = {
-        "name": f"{repo_name.capitalize()} Solutions",
-        "tagline": "Innovative solutions for modern problems",
-        "color_palette": ["#3498db", "#2ecc71", "#e74c3c", "#f39c12"],
-        "target_audience": "Tech-savvy professionals",
-        # Add more branding details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Branding for '{repo_name}' generated successfully",
-        data=branding_data
-    )
-
-@app.post("/github/{repo_name}/market_research", response_model=PitchResponse)
-def get_market_research(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate market research
-    research_data = {
-        "market_size": "$2.5 billion",
-        "competitors": ["CompetitorA", "CompetitorB", "CompetitorC"],
-        "opportunities": ["Emerging market in Asia", "Growing demand for automation"],
-        "challenges": ["Regulatory compliance", "Market saturation"],
-        # Add more research details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Market research for '{repo_name}' generated successfully",
-        data=research_data
-    )
-
-@app.post("/github/{repo_name}/pitch_deck", response_model=PitchResponse)
-def get_pitch_deck(repo_name: str, additional_info: Dict[str, Any] = Body({})):
-    # Here you would implement the logic to generate pitch deck
-    pitch_deck_data = {
-        "slides": [
-            {"title": "Introduction", "content": f"Introducing {repo_name.capitalize()}"},
-            {"title": "Problem", "content": "The problem we're solving"},
-            {"title": "Solution", "content": "Our innovative solution"},
-            {"title": "Market", "content": "Market size and opportunity"},
-            {"title": "Business Model", "content": "How we make money"},
-            {"title": "Team", "content": "Our exceptional team"},
-            {"title": "Ask", "content": "What we're looking for"},
-        ],
-        "download_url": f"/api/download/pitch_deck/{repo_name}",
-        # Add more pitch deck details as needed
-    }
-    
-    return PitchResponse(
-        message=f"Pitch deck for '{repo_name}' generated successfully",
-        data=pitch_deck_data
-    )
-
-def main():
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-
-if __name__ == "__main__":
-    main()
+    return brief
