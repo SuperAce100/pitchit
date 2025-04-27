@@ -1,15 +1,17 @@
+import asyncio
 import os
 from exa_py import Exa
 from pydantic import BaseModel
-from models.tools import Tool
+from backend.models.tools import Tool
 from dotenv import load_dotenv
+import chainlit as cl
 
 load_dotenv()
 
 exa = Exa(api_key=os.environ.get("EXA_API_KEY"))
 
 
-def search_web(query: str) -> str:
+async def search_web_async(query: str) -> str:
     print(f"Searching web for {query}")
     search_results = "\n".join(
         [
@@ -20,7 +22,17 @@ def search_web(query: str) -> str:
         ]
     )
 
+    search_results_element = cl.CustomElement(
+        name="WebSearch",
+        props={"args": {"query": query}, "response": search_results},
+    )
+
+    await cl.Message(content="", elements=[search_results_element]).send()
+
     return search_results
+
+def search_web(query: str) -> str:
+    return asyncio.run(search_web_async(query)) 
 
 
 class WebSearchArgs(BaseModel):

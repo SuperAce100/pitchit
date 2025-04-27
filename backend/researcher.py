@@ -1,4 +1,4 @@
-from models import Agent, tool_registry, llm_call
+from backend.models import Agent, tool_registry, llm_call
 from pydantic import BaseModel
 from typing import List
 
@@ -28,13 +28,7 @@ Before providing your final summary, wrap your research process inside <market_a
    e. Notable weaknesses
 4. Summarize your findings and note any conflicting information or gaps in your research.
 
-When you call the web search tool, make sure your queries are short and specific.
-
-This process will help ensure a thorough and accurate report.
-
-Remember to present all information in a plain text format, avoiding the use of tables or overly complex structures. Your summary should be easy to read and understand while providing valuable market insights.
-
-Always fill out all the fields you can, making all necessary searches to find the information.
+Conduct a max of 10 searches.
 """
 
 class Competitor(BaseModel):
