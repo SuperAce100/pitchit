@@ -1,1 +1,0 @@
-{"file_path": "app.py", "response": "import streamlit as st\n\nst.title(\"\ud83d\udd8b\ufe0f InkwellAI\")\nst.subheader(\"Your AI-powered research companion\")\n\n\nif st.button(\"Generate Paper\"):\n    with st.spinner(\"Generating paper...\"):\n        pass\n\nif st.button(\"Generate Paper\"):\n    with st.spinner(\"Generating paper...\"):\n        pass"}

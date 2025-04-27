@@ -73,26 +73,26 @@ async def on_message(msg: cl.Message):
 
         technical_brief_element = cl.CustomElement(
             name="TechnicalBriefViewer",
-            props={"briefData": technical_brief.model_dump()},
+            props={"brief_data": technical_brief.model_dump()},
         )
 
-        await cl.Message(content=f"## Technical Brief\n\n", elements=[technical_brief_element]).send()
+        # await cl.Message(content=f"## Technical Brief\n\n", elements=[technical_brief_element]).send()
 
         await cl.Message(content="## Conducting Market Research...", elements=[]).send()
 
         market_research = await cl.make_async(researcher.market_research)(repo_data["readme_content"])
 
-        market_research_element = cl.CustomElement(
-            name="MarketResearchViewer",
-            props={"marketData": market_research.model_dump()},
-        )
+        # market_research_element = cl.CustomElement(
+        #     name="MarketResearchViewer",
+        #     props={"market_data": market_research.model_dump()},
+        # )
 
-        await cl.Message(content=f"### Market Research\n\n", elements=[market_research_element]).send()
+        # await cl.Message(content=f"### Market Research\n\n", elements=[market_research_element]).send()
 
 
         slides = cl.CustomElement(
             name="SlideDeckViewer",
-            props={"marketResearchData": market_research.model_dump(), "technicalBriefData": technical_brief.model_dump()},
+            props={"market_research_data": market_research.model_dump(), "technical_brief_data": technical_brief.model_dump()},
         )
 
         await cl.Message(content=f"# Final Deck\n\n", elements=[slides]).send()

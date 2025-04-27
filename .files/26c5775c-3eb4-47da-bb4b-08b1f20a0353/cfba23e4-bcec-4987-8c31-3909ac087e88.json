@@ -1,1 +1,0 @@
-{"file_path": ".", "response": "Directories:\n.devcontainer/\n.git/\n.streamlit/\n__pycache__/\noutputs/\n\nFiles:\n.gitignore\nREADME.md\napp.py\ncitations.py\ncreate_doc.py\nrequirements.txt\nsample_outputs.md\nwriting.ipynb\nwritingagents.py"}

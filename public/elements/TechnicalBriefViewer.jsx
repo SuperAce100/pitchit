@@ -42,13 +42,13 @@ export default function TechnicalBriefViewer() {
   useEffect(() => {
     // Parse the JSON data from props
     try {
-      if (props.briefData) {
-        // If props.briefData is a string, parse it as JSON
-        if (typeof props.briefData === 'string') {
-          setBrief(JSON.parse(props.briefData));
+      if (props.brief_data) {
+        // If props.brief_data is a string, parse it as JSON
+        if (typeof props.brief_data === 'string') {
+          setBrief(JSON.parse(props.brief_data));
         } else {
           // If it's already an object, use it directly
-          setBrief(props.briefData);
+          setBrief(props.brief_data);
         }
       }
       setLoading(false);
@@ -57,7 +57,7 @@ export default function TechnicalBriefViewer() {
       setError("Failed to parse technical brief data");
       setLoading(false);
     }
-  }, [props.briefData]);
+  }, [props.brief_data]);
 
   if (loading) {
     return (
@@ -103,13 +103,13 @@ export default function TechnicalBriefViewer() {
   };
 
   const renderXFactors = () => {
-    if (!brief.xFactors || brief.xFactors.length === 0) {
+    if (!brief.x_factors || brief.x_factors.length === 0) {
       return <p className="text-gray-500">No unique selling points specified</p>;
     }
 
     return (
       <div className="space-y-4 mt-4">
-        {brief.xFactors.map((factor, index) => (
+        {brief.x_factors.map((factor, index) => (
           <div key={index} className="flex items-start">
             <Star className="h-5 w-5 mr-2 text-yellow-500 flex-shrink-0 mt-0.5" />
             <div>
@@ -202,10 +202,10 @@ export default function TechnicalBriefViewer() {
           )}
         </div>
         
-        <CardTitle className="text-xl font-bold">{brief.productName || 'Unnamed Product'}</CardTitle>
+        <CardTitle className="text-xl font-bold">{brief.product_name || 'Unnamed Product'}</CardTitle>
         
         <CardDescription className="mt-2">
-          <div className="font-medium text-gray-700">{brief.productIdea || 'No product idea specified'}</div>
+          <div className="font-medium text-gray-700">{brief.product_idea || 'No product idea specified'}</div>
           <div className="flex items-center mt-3 text-sm text-gray-500">
             {brief.author && (
               <span className="mr-4">Author: {brief.author}</span>
@@ -245,7 +245,7 @@ export default function TechnicalBriefViewer() {
               </h3>
               <Separator className="mb-4" />
               <div className="text-gray-700 whitespace-pre-line">
-                {brief.productOverview || 'No product overview provided'}
+                {brief.product_overview || 'No product overview provided'}
               </div>
             </TabsContent>
             
